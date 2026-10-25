@@ -84,9 +84,14 @@ LAB_DISPLAY_LOOKUP: Final[Mapping[str, LabTest]] = {
     "BASIC METABOLIC PANEL W/ EGFR": LabTest.IGNORE,
 }
 
-# Only results with this exact status are kept (entered-in-error, preliminary,
-# cancelled, amended, corrected, and anything else are excluded).
-ACCEPTED_LAB_STATUS: Final = "final"
+# Statuses that count as a completed result (FHIR semantics: amended and corrected
+# are revised final results). Entered-in-error, preliminary, cancelled, and
+# anything else are excluded.
+ACCEPTED_LAB_STATUSES: Final[Mapping[str, LabStatus]] = {
+    "final": LabStatus.FINAL,
+    "amended": LabStatus.AMENDED,
+    "corrected": LabStatus.CORRECTED,
+}
 
 # Brand and generic names (lowercase) -> base generic.
 ANTICOAGULANT_LOOKUP: Final[Mapping[str, str]] = {
@@ -154,7 +159,7 @@ _CELSIUS_UNITS: Final = frozenset({"c", "°c", "degc", "cel", "celsius"})
 
 
 class ExclusionReason(StrEnum):
-    LAB_STATUS_NOT_FINAL = "LAB_STATUS_NOT_FINAL"
+    LAB_STATUS_EXCLUDED = "LAB_STATUS_EXCLUDED"
     MALFORMED = "MALFORMED"  # a field the policy needs is missing or unparseable
     NOT_APPLICABLE = "NOT_APPLICABLE"  # well-formed, but not used by any rule (e.g. heart rate)
 
@@ -352,36 +357,37 @@ def normalize_lab(code: object, display: object) -> LabTest:
     return LabTest.IGNORE
 
 
-def _parse_lab(locator: str, record: Mapping[str, Any]) -> LabResult:
+def _parse_lab(locator: str, record: Mapping[str, Any], status: LabStatus) -> LabResult:
     collected_at, _ = parse_timestamp(record.get("effective_at"))
     display = _optional_str(record.get("display"))
     return LabResult(
         test=normalize_lab(record.get("code"), display),
         code_raw=_optional_str(record.get("code")),
         collected_at=collected_at,
-        status=LabStatus.FINAL,
+        status=status,
         evidence=(_structured_evidence(locator, record, display, collected_at.date()),),
     )
 
 
 def extract_structured_labs(submission: Mapping[str, Any]) -> LabExtraction:
-    """Keep only ``final`` results, normalized to CBC / CMP / IGNORE."""
+    """Keep final / amended / corrected results, normalized to CBC / CMP / IGNORE."""
 
     labs: list[LabResult] = []
     excluded = _non_objects(submission, "labs")
     for locator, record in _records(submission, "labs"):
-        status = _optional_str(record.get("status"))
-        if status is None or status.lower() != ACCEPTED_LAB_STATUS:
+        raw_status = _optional_str(record.get("status"))
+        status = ACCEPTED_LAB_STATUSES.get(raw_status.lower()) if raw_status else None
+        if status is None:
             excluded.append(
                 ExcludedRecord(
                     locator=locator,
-                    reason=ExclusionReason.LAB_STATUS_NOT_FINAL,
-                    detail=f"status {status!r} is not {ACCEPTED_LAB_STATUS!r}",
+                    reason=ExclusionReason.LAB_STATUS_EXCLUDED,
+                    detail=f"status {raw_status!r} is not one of {sorted(ACCEPTED_LAB_STATUSES)}",
                 )
             )
             continue
         try:
-            labs.append(_parse_lab(locator, record))
+            labs.append(_parse_lab(locator, record, status))
         except _Malformed as exc:
             excluded.append(ExcludedRecord(locator=locator, reason=ExclusionReason.MALFORMED, detail=str(exc)))
     return LabExtraction(labs=tuple(labs), excluded=tuple(excluded))

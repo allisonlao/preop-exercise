@@ -10,9 +10,9 @@ from typing import Any
 
 import pytest
 
-from engine import check_acute_safety
+from engine import check_acute_safety, check_testing
 from fact_builders import ready_facts
-from models import DrugClass, LabTest, ReasonCode, RiskLevel, TimePrecision, celsius_to_fahrenheit
+from models import DrugClass, LabStatus, LabTest, ReasonCode, RiskLevel, TimePrecision, celsius_to_fahrenheit
 from preprocess import (
     ANTICOAGULANT_LOOKUP,
     ANTIPLATELET_LOOKUP,
@@ -43,11 +43,21 @@ def temp_record(**fields: Any) -> dict[str, Any]:
 # =============================================================================
 
 
-@pytest.mark.parametrize("status", ["entered-in-error", "cancelled", "preliminary", "amended", None, ""])
+@pytest.mark.parametrize("status", ["entered-in-error", "cancelled", "preliminary", "registered", None, ""])
 def test_non_final_labs_are_dropped(status: str | None) -> None:
     result = extract_structured_labs({"labs": [lab_record("CBC", status=status)]})  # type: ignore[arg-type]
     assert result.labs == ()
-    assert [e.reason for e in result.excluded] == [ExclusionReason.LAB_STATUS_NOT_FINAL]
+    assert [e.reason for e in result.excluded] == [ExclusionReason.LAB_STATUS_EXCLUDED]
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [("final", LabStatus.FINAL), ("amended", LabStatus.AMENDED), ("Corrected", LabStatus.CORRECTED)],
+)
+def test_final_amended_and_corrected_labs_count(raw: str, expected: LabStatus) -> None:
+    (lab,) = extract_structured_labs({"labs": [lab_record("CBC", status=raw)]}).labs
+    assert lab.status is expected
+    assert check_testing(ready_facts(labs=(lab,))) == []
 
 
 def test_status_match_is_case_insensitive() -> None:
@@ -310,9 +320,9 @@ def sample() -> list[dict[str, Any]]:
 def test_sample_preprocesses_with_only_entered_in_error_labs_excluded(sample: list[dict[str, Any]]) -> None:
     excluded = [(row["case_id"], e.reason) for row in sample for e in preprocess_submission(row["submission"]).excluded]
     assert excluded == [
-        ("case_00004", ExclusionReason.LAB_STATUS_NOT_FINAL),
-        ("case_00006", ExclusionReason.LAB_STATUS_NOT_FINAL),
-        ("case_00041", ExclusionReason.LAB_STATUS_NOT_FINAL),
+        ("case_00004", ExclusionReason.LAB_STATUS_EXCLUDED),
+        ("case_00006", ExclusionReason.LAB_STATUS_EXCLUDED),
+        ("case_00041", ExclusionReason.LAB_STATUS_EXCLUDED),
     ]
 
 
