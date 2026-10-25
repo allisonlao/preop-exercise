@@ -97,7 +97,6 @@ Run the unit tests with:
 
 ```bash
 make test
-make typecheck   # mypy --strict
 ```
 
 ## Architecture (in progress)
