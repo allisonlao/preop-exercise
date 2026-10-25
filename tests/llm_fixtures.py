@@ -10,6 +10,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 SAMPLE = ROOT / "data" / "patients_sample_50.jsonl"
 RESPONSES = Path(__file__).resolve().parent / "fixtures" / "llm_responses.json"
+CASE_00020 = Path(__file__).resolve().parent / "fixtures" / "case_00020_postop_deferral.json"
 
 NURSING_DOC_ID = "1f5be5f7-1a56-5e66-9c45-2e94e55b0271"
 CONSENT_DOC_ID = "fdce8743-2288-5749-b5df-f9f191788315"
@@ -34,3 +35,11 @@ def raw_response(doc_id: str) -> str:
 
     responses: dict[str, Any] = json.loads(RESPONSES.read_text(encoding="utf-8"))
     return json.dumps(responses[doc_id])
+
+
+@cache
+def case_00020() -> dict[str, Any]:
+    """The case_00020 false-READY record: submission, label, and the pre-enum model output."""
+
+    loaded: dict[str, Any] = json.loads(CASE_00020.read_text(encoding="utf-8"))
+    return loaded

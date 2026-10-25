@@ -14,13 +14,14 @@ from typing import Any
 
 import pytest
 
-from engine import evaluate
-from llm_fixtures import NURSING_DOC_ID, SAMPLE, raw_response
+from engine import evaluate, plan_gaps
+from llm_fixtures import NURSING_DOC_ID, SAMPLE, case_00020, raw_response
 from models import (
     Decision,
     IssueCategory,
     MedicationStatus,
     ReasonCode,
+    ReconciledPatientFacts,
     TimePrecision,
 )
 from preprocess import StructuredSubmission, preprocess_submission
@@ -32,6 +33,8 @@ from reconcile import (
     reconcile_with_notes,
 )
 from schemas import (
+    POSTOP_INSTRUCTIONS,
+    PREOP_INSTRUCTIONS,
     AnticoagulationPlanMention,
     ConsentDetails,
     ConsentState,
@@ -44,6 +47,8 @@ from schemas import (
     HnPState,
     MedicationMention,
     MedStatus,
+    PostopAction,
+    PreopAction,
     QuotedFact,
     VitalMention,
     VitalType,
@@ -126,12 +131,20 @@ def med_mention(name: str, status: MedStatus, quote: str) -> QuotedFact[Any]:
     return q(MedicationMention(drug_name_raw=name, status=status), quote)
 
 
-def plan_mention(drug: str, preop: str | None, postop: str | None, quote: str, *, hedged: bool = False,
-                 timing: str | None = "2 days before") -> QuotedFact[Any]:
+def plan_mention(
+    drug: str, preop: str | None, postop: str | None, quote: str, *,
+    preop_action: PreopAction = PreopAction.HOLD, postop_action: PostopAction = PostopAction.RESUME,
+    timing: str | None = "2 days before", postop_timing: str | None = None,
+) -> QuotedFact[Any]:
+    """A plan whose ``preop`` / ``postop`` texts are the action quotes; None means NOT_ADDRESSED."""
+
     return q(
         AnticoagulationPlanMention(
-            drug_name_raw=drug, preop_instruction=preop, preop_timing_raw=timing if preop else None,
-            postop_instruction=postop, is_hedged=hedged,
+            drug_name_raw=drug,
+            preop_action=q(preop_action if preop else PreopAction.NOT_ADDRESSED, preop or ""),
+            preop_timing_raw=timing if preop else None,
+            postop_action=q(postop_action if postop else PostopAction.NOT_ADDRESSED, postop or ""),
+            postop_timing_raw=postop_timing,
         ),
         quote,
     )
@@ -467,6 +480,130 @@ def test_unverified_plan_is_ignored() -> None:
     facts = reconcile_patient_facts(structured, [*base_extractions(), fake])
     assert facts.anticoagulation_plans == ()
     assert codes(structured, [*base_extractions(), fake]) == {ReasonCode.ANTICOAG_PLAN_MISSING}
+
+
+# =============================================================================
+# Plan actions: only firm actions count as an instruction (case_00020)
+# =============================================================================
+
+CASE_20 = case_00020()
+CARDIOLOGY_TEXT = next(
+    d["text"] for d in CASE_20["submission"]["documents"] if d["doc_id"] == CASE_20["deferral_doc_id"]
+)
+CARDIOLOGY_PLAN_QUOTE = CASE_20["observed_v1_anticoagulation_plans"][0]["quote"]
+WARFARIN_PREOP = "Stop warfarin 5 days before surgery (last dose 03/15/2026)"
+DEFERRAL = CASE_20["deferral_sentence"]
+WARFARIN_ACTIVE = [{"name": "Coumadin 5 mg PO daily (INR goal 2-3)", "active": True}]
+NON_INSTRUCTION_POSTOP = [PostopAction.DEFERRED, PostopAction.NOT_ADDRESSED, PostopAction.UNCLEAR]
+NON_INSTRUCTION_PREOP = [PreopAction.DEFERRED, PreopAction.NOT_ADDRESSED, PreopAction.UNCLEAR]
+
+
+def warfarin_plan_facts(postop_action: PostopAction, postop_quote: str = DEFERRAL, **kw: Any) -> ReconciledPatientFacts:
+    """The real case_00020 cardiology note, with the given post-op action, reconciled on a READY baseline."""
+
+    note = extracted(
+        "cardio", CARDIOLOGY_TEXT, DocumentType.CONSULT_NOTE, "CARDIOLOGY PROGRESS NOTE",
+        anticoagulation_plans=[plan_mention(
+            "warfarin", WARFARIN_PREOP, postop_quote, CARDIOLOGY_PLAN_QUOTE,
+            postop_action=postop_action, timing="5 days before surgery", **kw,
+        )],
+    )
+    structured = submission(documents=[*BASE_DOCS, ("cardio", "2026-03-05")], medications=WARFARIN_ACTIVE)
+    return reconcile_patient_facts(structured, [*base_extractions(), note])
+
+
+def assert_postop_missing(facts: ReconciledPatientFacts) -> None:
+    (plan,) = facts.anticoagulation_plans
+    assert plan.postop_instruction is None
+    assert ReasonCode.ANTICOAG_PLAN_POSTOP_MISSING in plan_gaps(plan)
+    result = evaluate(facts)
+    assert result.decision is Decision.NEEDS_FOLLOW_UP
+    assert {issue.category for issue in result.issues} == {IssueCategory.ANTICOAGULATION_MANAGEMENT}
+
+
+def test_case_00020_deferred_postop_is_a_missing_instruction() -> None:
+    facts = warfarin_plan_facts(PostopAction.DEFERRED)
+    assert_postop_missing(facts)
+    (plan,) = facts.anticoagulation_plans
+    assert plan.hedged
+    assert plan.preop_instruction == WARFARIN_PREOP and plan.preop_timing_specified
+    assert plan.evidence[0].detail == "plan for warfarin: pre-op HOLD (5 days before surgery); post-op DEFERRED"
+
+    (issue,) = evaluate(facts).issues
+    assert any(DEFERRAL in (evidence.quote or "") for evidence in issue.evidence)
+    assert {issue.category.value} == set(CASE_20["label"]["categories"])
+
+
+@pytest.mark.parametrize("action", NON_INSTRUCTION_POSTOP)
+def test_non_instruction_postop_actions_count_as_missing(action: PostopAction) -> None:
+    assert_postop_missing(warfarin_plan_facts(action))
+
+
+@pytest.mark.parametrize("action", sorted(POSTOP_INSTRUCTIONS))
+def test_instruction_postop_actions_count_as_present(action: PostopAction) -> None:
+    plan = plan_doc("a", PLAN_A_TEXT, "Eliquis", "Hold Eliquis for the 2 days before surgery",
+                    "Resume Eliquis 48 hours post-op", PLAN_A_TEXT.splitlines()[1], postop_action=action)
+    structured = submission(documents=[*BASE_DOCS, ("a", "2026-03-03")], medications=APIXABAN_ACTIVE)
+    assert codes(structured, [*base_extractions(), plan]) == set()
+
+
+@pytest.mark.parametrize("action", NON_INSTRUCTION_PREOP)
+def test_non_instruction_preop_actions_count_as_missing(action: PreopAction) -> None:
+    plan = plan_doc("a", PLAN_A_TEXT, "Eliquis", "Hold Eliquis for the 2 days before surgery",
+                    "Resume Eliquis 48 hours post-op", PLAN_A_TEXT.splitlines()[1], preop_action=action)
+    structured = submission(documents=[*BASE_DOCS, ("a", "2026-03-03")], medications=APIXABAN_ACTIVE)
+    facts = reconcile_patient_facts(structured, [*base_extractions(), plan])
+    (resolved,) = facts.anticoagulation_plans
+    assert resolved.preop_instruction is None
+    assert ReasonCode.ANTICOAG_PLAN_PREOP_INCOMPLETE in plan_gaps(resolved)
+    assert evaluate(facts).decision is Decision.NEEDS_FOLLOW_UP
+
+
+@pytest.mark.parametrize("action", sorted(PREOP_INSTRUCTIONS))
+def test_instruction_preop_actions_still_require_timing(action: PreopAction) -> None:
+    def plan_codes(timing: str | None) -> set[ReasonCode]:
+        plan = plan_doc("a", PLAN_A_TEXT, "Eliquis", "Hold Eliquis for the 2 days before surgery",
+                        "Resume Eliquis 48 hours post-op", PLAN_A_TEXT.splitlines()[1],
+                        preop_action=action, timing=timing)
+        structured = submission(documents=[*BASE_DOCS, ("a", "2026-03-03")], medications=APIXABAN_ACTIVE)
+        return codes(structured, [*base_extractions(), plan])
+
+    assert plan_codes("2 days before") == set()
+    assert ReasonCode.ANTICOAG_PLAN_PREOP_INCOMPLETE in plan_codes(None)
+
+
+def test_unverified_action_quote_downgrades_resume_to_missing() -> None:
+    assert_postop_missing(warfarin_plan_facts(PostopAction.RESUME, "Resume warfarin on postoperative day 1."))
+
+
+def test_postop_timing_never_gates_the_decision() -> None:
+    no_timing = plan_doc("a", PLAN_A_TEXT, "Eliquis", "Hold Eliquis for the 2 days before surgery",
+                         "Resume Eliquis 48 hours post-op", PLAN_A_TEXT.splitlines()[1], postop_timing=None)
+    structured = submission(documents=[*BASE_DOCS, ("a", "2026-03-03")], medications=APIXABAN_ACTIVE)
+    assert codes(structured, [*base_extractions(), no_timing]) == set()
+    assert_postop_missing(warfarin_plan_facts(PostopAction.DEFERRED, postop_timing="after surgery"))
+
+
+def test_resume_label_on_a_deferral_quote_is_downgraded_by_the_quote_check() -> None:
+    # The pre-enum extraction's mistake carried into the new schema: a verified
+    # deferral sentence labeled as a firm RESUME.
+    facts = warfarin_plan_facts(PostopAction.RESUME)
+    assert_postop_missing(facts)
+    (plan,) = facts.anticoagulation_plans
+    assert plan.evidence[0].detail == (
+        "plan for warfarin: pre-op HOLD (5 days before surgery); post-op UNCLEAR [extracted as RESUME]"
+    )
+
+
+def test_resume_label_on_a_bare_hand_off_becomes_deferred() -> None:
+    text = "CARDIOLOGY NOTE\n1. Hold apixaban for the 2 days before surgery. Resume apixaban per cardiology."
+    plan = plan_doc("a", text, "apixaban", "Hold apixaban for the 2 days before surgery",
+                    "Resume apixaban per cardiology", text.splitlines()[1])
+    structured = submission(documents=[*BASE_DOCS, ("a", "2026-03-03")], medications=APIXABAN_ACTIVE)
+    facts = reconcile_patient_facts(structured, [*base_extractions(), plan])
+    (resolved,) = facts.anticoagulation_plans
+    assert resolved.postop_instruction is None and resolved.hedged
+    assert evaluate(facts).decision is Decision.NEEDS_FOLLOW_UP
 
 
 # =============================================================================

@@ -40,6 +40,11 @@ class _Strict(BaseModel):
 
 
 class ConsentState(StrEnum):
+    """Patient-signature state. SIGNED only when the patient's signature is recorded
+    as done. A signature that is promised or awaited ("to be signed", "signature:
+    pending", "will return the signed consent") is PENDING. A blank or explicitly
+    absent signature is UNSIGNED."""
+
     SIGNED = "SIGNED"
     UNSIGNED = "UNSIGNED"
     REVOKED = "REVOKED"
@@ -49,9 +54,56 @@ class ConsentState(StrEnum):
 
 
 class HnPState(StrEnum):
+    """H&P completion. COMPLETE only when the note is finished and signed. A note
+    that is still to be finished ("to be completed", draft, unsigned) is INCOMPLETE."""
+
     COMPLETE = "COMPLETE"
     INCOMPLETE = "INCOMPLETE"
     UNCLEAR = "UNCLEAR"
+
+
+class PreopAction(StrEnum):
+    """What the plan tells the patient to do with this drug before surgery.
+    HOLD: stop or hold it ("Hold Xarelto for the 2 days before surgery").
+    CONTINUE: keep taking it through surgery ("continue without interruption").
+    BRIDGE: give a bridging agent in its place ("Bridge with enoxaparin ... starting 3 days prior").
+    DEFERRED: the decision is postponed or handed to someone else ("to be determined by
+    the surgical team", "per cardiology", "will discuss").
+    NOT_ADDRESSED: the plan says nothing about pre-op management.
+    UNCLEAR: ambiguous or contradictory wording."""
+
+    HOLD = "HOLD"
+    CONTINUE = "CONTINUE"
+    BRIDGE = "BRIDGE"
+    DEFERRED = "DEFERRED"
+    NOT_ADDRESSED = "NOT_ADDRESSED"
+    UNCLEAR = "UNCLEAR"
+
+
+class PostopAction(StrEnum):
+    """What the plan tells the patient to do with this drug after surgery.
+    RESUME: restart it ("Resume Eliquis 48 hours post-op", "Resume warfarin after surgery").
+    CONTINUE_HOLD: keep it held after surgery until a stated point ("remain off until POD 3").
+    DISCONTINUE: do not restart it.
+    DEFERRED: the decision is postponed or handed to someone else instead of being made
+    here ("will be decided after surgery", "resume per cardiology", "to be determined").
+    A restart that states its own timing or condition is RESUME even if it also names
+    who oversees it ("Resume Xarelto 24-48 hours after surgery, per surgical team").
+    NOT_ADDRESSED: the plan says nothing about post-op management.
+    UNCLEAR: ambiguous or contradictory wording."""
+
+    RESUME = "RESUME"
+    CONTINUE_HOLD = "CONTINUE_HOLD"
+    DISCONTINUE = "DISCONTINUE"
+    DEFERRED = "DEFERRED"
+    NOT_ADDRESSED = "NOT_ADDRESSED"
+    UNCLEAR = "UNCLEAR"
+
+
+# Only these actions count as an instruction. DEFERRED, NOT_ADDRESSED and UNCLEAR
+# count as a missing instruction (fail closed).
+PREOP_INSTRUCTIONS: Final = frozenset({PreopAction.HOLD, PreopAction.CONTINUE, PreopAction.BRIDGE})
+POSTOP_INSTRUCTIONS: Final = frozenset({PostopAction.RESUME, PostopAction.CONTINUE_HOLD, PostopAction.DISCONTINUE})
 
 
 class MedStatus(StrEnum):
@@ -148,15 +200,15 @@ class MedicationMention(_Strict):
 
 class AnticoagulationPlanMention(_Strict):
     drug_name_raw: str
-    preop_instruction: str | None
-    """The pre-operative hold/stop instruction as written; null when absent."""
+    preop_action: QuotedFact[PreopAction]
+    """The pre-op action; the quote is the sentence that states it (empty when NOT_ADDRESSED)."""
     preop_timing_raw: str | None
-    """The timing phrase inside the pre-op instruction (``"2 days before"``,
-    ``"last dose 03/01"``); null when the instruction gives no timing."""
-    postop_instruction: str | None
-    """The post-operative resume instruction as written; null when absent."""
-    is_hedged: bool
-    """True when the plan defers or does not commit to a decision."""
+    """The timing phrase of the pre-op action (``"2 days before"``, ``"last dose 03/01"``);
+    null when none is given."""
+    postop_action: QuotedFact[PostopAction]
+    """The post-op action; the quote is the sentence that states it (empty when NOT_ADDRESSED)."""
+    postop_timing_raw: str | None
+    """The timing phrase of the post-op action (``"48 hours post-op"``); null when none is given."""
 
 
 class LabMention(_Strict):

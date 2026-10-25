@@ -26,6 +26,7 @@ then evaluates every reading that could be the most recent (worst case).
 
 from __future__ import annotations
 
+import logging
 import re
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
@@ -52,6 +53,7 @@ from models import (
     TemperatureUnit,
     TimePrecision,
 )
+from instruction_check import check_instruction
 from preprocess import DocumentHeader, ExclusionReason, StructuredMedication, StructuredSubmission, classify_drug
 from schemas import (
     AnticoagulationPlanMention,
@@ -59,14 +61,21 @@ from schemas import (
     DocumentType,
     ExtractedDocument,
     ExtractionStatus,
+    POSTOP_INSTRUCTIONS,
+    PREOP_INSTRUCTIONS,
     HnPState,
     MedStatus,
+    PostopAction,
+    PreopAction,
     QuotedFact,
     VitalMention,
     VitalType,
 )
 
 T = TypeVar("T")
+Action = TypeVar("Action", PreopAction, PostopAction)
+
+logger = logging.getLogger(__name__)
 
 
 class Unknown(Enum):
@@ -117,8 +126,54 @@ class TrustedMedication:
 @dataclass(frozen=True)
 class TrustedPlan:
     index: int  # position in the extracted list; keeps plan ids stable
-    plan: AnticoagulationPlanMention
+    drug_name_raw: str
     quote: str
+    # Effective actions: UNCLEAR when the quote did not verify, then possibly
+    # downgraded by instruction_check. *_extracted keeps the model's label for evidence.
+    preop_action: PreopAction
+    preop_extracted: PreopAction
+    preop_quote: str | None
+    preop_timing_raw: str | None
+    postop_action: PostopAction
+    postop_extracted: PostopAction
+    postop_quote: str | None
+    postop_timing_raw: str | None  # evidence text only; never gates a decision
+
+
+def effective_action(fact: QuotedFact[Action], unclear: Action, side: str, drug: str) -> tuple[Action, Action]:
+    """``(extracted, effective)`` for one side of a plan.
+
+    An unverified quote makes the action UNCLEAR; a verified one is then run
+    through the deterministic quote check, which can only downgrade it.
+    """
+
+    if not fact.verified:
+        return fact.value, unclear
+    effective = check_instruction(fact.value, fact.quote)
+    if effective is not fact.value:
+        logger.warning("%s action for %s downgraded from %s to %s by quote check: %r",
+                       side, drug, fact.value, effective, fact.quote)
+    return fact.value, effective
+
+
+def trusted_plan(index: int, fact: QuotedFact[AnticoagulationPlanMention]) -> TrustedPlan:
+    mention = fact.value
+    drug = mention.drug_name_raw
+    preop_extracted, preop = effective_action(mention.preop_action, PreopAction.UNCLEAR, "pre-op", drug)
+    postop_extracted, postop = effective_action(mention.postop_action, PostopAction.UNCLEAR, "post-op", drug)
+    return TrustedPlan(
+        index=index,
+        drug_name_raw=drug,
+        quote=fact.quote,
+        preop_action=preop,
+        preop_extracted=preop_extracted,
+        preop_quote=mention.preop_action.quote if mention.preop_action.verified else None,
+        preop_timing_raw=mention.preop_timing_raw,
+        postop_action=postop,
+        postop_extracted=postop_extracted,
+        postop_quote=mention.postop_action.quote if mention.postop_action.verified else None,
+        postop_timing_raw=mention.postop_timing_raw,
+    )
 
 
 @dataclass(frozen=True)
@@ -196,7 +251,7 @@ def filter_unverified(doc: ExtractedDocument, header: DocumentHeader | None, fal
             for m in doc.medication_mentions
         ),
         plans=tuple(
-            TrustedPlan(index, p.value, p.quote) for index, p in enumerate(doc.anticoagulation_plans) if p.verified
+            trusted_plan(index, p) for index, p in enumerate(doc.anticoagulation_plans) if p.verified
         ),
     )
 
@@ -724,19 +779,39 @@ def plans_contradict(a: AnticoagulationPlan, b: AnticoagulationPlan) -> bool:
 
 
 def _plan_from(doc: TrustedDocument, trusted: TrustedPlan) -> AnticoagulationPlan:
-    mention = trusted.plan
-    _, generic = classify_drug(mention.drug_name_raw)
-    preop = mention.preop_instruction or None
+    _, generic = classify_drug(trusted.drug_name_raw)
+    # Only an instruction action carries text into the engine; DEFERRED,
+    # NOT_ADDRESSED and UNCLEAR (including unverified) become a missing instruction.
+    preop = (trusted.preop_quote or None) if trusted.preop_action in PREOP_INSTRUCTIONS else None
+    postop = (trusted.postop_quote or None) if trusted.postop_action in POSTOP_INSTRUCTIONS else None
     return AnticoagulationPlan(
         plan_id=f"{doc.doc_id}:plan[{trusted.index}]",
         document_id=doc.doc_id,
         written_on=doc.documented_on,
-        drugs_addressed=(generic or mention.drug_name_raw,),
+        drugs_addressed=(generic or trusted.drug_name_raw,),
         preop_instruction=preop,
-        preop_timing_specified=preop is not None and bool(mention.preop_timing_raw),
-        postop_instruction=mention.postop_instruction or None,
-        hedged=mention.is_hedged,
-        evidence=(doc_evidence(doc, trusted.quote, f"plan for {mention.drug_name_raw}"),),
+        preop_timing_specified=preop is not None and bool(trusted.preop_timing_raw),
+        postop_instruction=postop,
+        hedged=PreopAction.DEFERRED is trusted.preop_action or PostopAction.DEFERRED is trusted.postop_action,
+        evidence=(doc_evidence(doc, trusted.quote, plan_detail(trusted)),),
+    )
+
+
+def plan_detail(trusted: TrustedPlan) -> str:
+    """Evidence detail such as ``plan for warfarin: pre-op HOLD (5 days before surgery); post-op DEFERRED``.
+
+    A side downgraded by an unverified quote or the quote check also shows the
+    extracted label, e.g. ``post-op UNCLEAR [extracted as RESUME]``.
+    """
+
+    def side(name: str, action: str, extracted: str, timing: str | None) -> str:
+        text = f"{name} {action}" + (f" ({timing})" if timing else "")
+        return text if action == extracted else f"{text} [extracted as {extracted}]"
+
+    return (
+        f"plan for {trusted.drug_name_raw}: "
+        f"{side('pre-op', trusted.preop_action, trusted.preop_extracted, trusted.preop_timing_raw)}; "
+        f"{side('post-op', trusted.postop_action, trusted.postop_extracted, trusted.postop_timing_raw)}"
     )
 
 

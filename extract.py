@@ -66,11 +66,12 @@ SECTIONS
   Do not include clinician names.
 - hnp_details: only when the document is a history and physical.
   completion = COMPLETE when it documents both history and physical exam and is signed
-  or finalized; INCOMPLETE when it is a draft, unsigned, pending, or missing the exam;
+  or finalized; INCOMPLETE when it is a draft, unsigned, pending, "to be completed", or
+  missing the exam;
   UNCLEAR otherwise. date_of_service = the date of service as written.
 - consent_details: only for consent documents. signature_states lists every statement
   about the PATIENT's (or legal representative's) signature: SIGNED, UNSIGNED (blank or
-  not signed), PENDING (sent / awaiting / not completed), VERBAL_ONLY, REVOKED
+  not signed), PENDING (sent / awaiting / "to be signed" / not completed), VERBAL_ONLY, REVOKED
   (withdrawn or rescinded), UNCLEAR. A clinician or physician attestation signature is
   NOT a patient signature. procedure = the procedure named on the consent as written.
 - vitals_mentions: every blood pressure and temperature reading that has an actual
@@ -82,13 +83,27 @@ SECTIONS
   A drug that appears only as a planned future step (e.g. a bridging regimen inside a
   perioperative plan) is not a medication mention; record it in anticoagulation_plans.
 - anticoagulation_plans: every perioperative management plan for a blood thinner
-  (anticoagulant or antiplatelet). preop_instruction / postop_instruction are the
-  instruction texts as written, or null when absent. preop_timing_raw is the timing
-  phrase from the pre-op instruction, or null if no timing is given.
-  is_hedged = true when the plan defers or does not commit to a decision (e.g. "to be
-  determined", "will follow up with recommendations", "consider holding", "defer to").
-  A firm instruction with a clinical condition (e.g. "resume once hemostasis is secure")
-  is not hedged.
+  (anticoagulant or antiplatelet). preop_action / postop_action each take one value,
+  quoting only the sentence that states that side's action. preop_timing_raw /
+  postop_timing_raw are the timing phrases as written, or null if none is given.
+  preop_action:
+    HOLD           "Hold apixaban for the 2 days before surgery."
+    CONTINUE       "Continue aspirin through surgery without interruption."
+    BRIDGE         "Bridge with enoxaparin starting 3 days before surgery."
+    DEFERRED       "Pre-op management of rivaroxaban per surgeon."
+    NOT_ADDRESSED  pre-op management is not mentioned (empty quote)
+    UNCLEAR        "Consider adjusting apixaban before surgery."
+  postop_action:
+    RESUME         "Resume apixaban 48 hours after surgery."
+    CONTINUE_HOLD  "Keep warfarin held until POD 3."
+    DISCONTINUE    "Do not restart clopidogrel after surgery."
+    DEFERRED       "Restart of anticoagulation will be decided at the post-op visit."
+    NOT_ADDRESSED  post-op management is not mentioned (empty quote)
+    UNCLEAR        "Anticoagulation after surgery as tolerated."
+  A bare hand-off with no specific timing or clinical condition (e.g., 'resume per
+  cardiology', 'to be determined', 'will discuss') MUST map to DEFERRED. A restart that
+  states its own timing or condition stays RESUME even if it names who oversees it.
+  If the action is ambiguous, choose UNCLEAR rather than guessing.
 - lab_mentions: every laboratory test mentioned, with its date and result as written
   (null when absent).
 - date_risk_mentions: every statement of the scheduled procedure date (PROCEDURE_DATE)

@@ -21,7 +21,17 @@ from extract import (
     extract_document,
 )
 from llm_fixtures import CONSENT_DOC_ID, NURSING_DOC_ID, document_text, raw_response
-from schemas import SCHEMA_NAME, ConsentState, ExtractedDocument, ExtractionStatus, VitalType
+from schemas import (
+    POSTOP_INSTRUCTIONS,
+    PREOP_INSTRUCTIONS,
+    SCHEMA_NAME,
+    ConsentState,
+    ExtractedDocument,
+    ExtractionStatus,
+    PostopAction,
+    PreopAction,
+    VitalType,
+)
 from verify import iter_quoted_facts, verify_extracted_document
 
 
@@ -247,4 +257,30 @@ def test_schema_is_accepted_by_openai_strict_conversion() -> None:
 
     strict = to_strict_json_schema(ExtractedDocument)
     assert "QuotedFact_ConsentState_" in strict["$defs"]
+    assert {"QuotedFact_PreopAction_", "QuotedFact_PostopAction_"} <= set(strict["$defs"])
     assert SCHEMA_NAME.startswith("extracted_document_")
+
+
+def test_plan_actions_are_closed_enums() -> None:
+    assert [a.value for a in PostopAction] == [
+        "RESUME", "CONTINUE_HOLD", "DISCONTINUE", "DEFERRED", "NOT_ADDRESSED", "UNCLEAR",
+    ]
+    assert [a.value for a in PreopAction] == ["HOLD", "CONTINUE", "BRIDGE", "DEFERRED", "NOT_ADDRESSED", "UNCLEAR"]
+    assert POSTOP_INSTRUCTIONS == {PostopAction.RESUME, PostopAction.CONTINUE_HOLD, PostopAction.DISCONTINUE}
+    assert PREOP_INSTRUCTIONS == {PreopAction.HOLD, PreopAction.CONTINUE, PreopAction.BRIDGE}
+
+
+def test_plan_schema_has_no_boolean_or_free_text_instruction_fields() -> None:
+    (plan,) = [obj for obj in _objects(ExtractedDocument.model_json_schema()) if obj.get("title") == "AnticoagulationPlanMention"]
+    assert set(plan["properties"]) == {
+        "drug_name_raw", "preop_action", "preop_timing_raw", "postop_action", "postop_timing_raw",
+    }
+    assert "boolean" not in json.dumps(plan)
+
+
+def test_consent_and_hnp_enums_document_pending_and_incomplete_wording() -> None:
+    defs = ExtractedDocument.model_json_schema()["$defs"]
+    assert '"to be signed"' in defs["ConsentState"]["description"]
+    assert "PENDING" in defs["ConsentState"]["description"]
+    assert '"to be completed"' in defs["HnPState"]["description"]
+    assert "INCOMPLETE" in defs["HnPState"]["description"]

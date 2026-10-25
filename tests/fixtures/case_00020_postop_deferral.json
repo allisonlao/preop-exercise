@@ -1,0 +1,513 @@
+{
+  "_comment": "case_00020 false READY: the cardiology note defers post-op anticoagulation; the pre-enum extraction reported it as a post-op instruction.",
+  "case_id": "case_00020",
+  "deferral_doc_id": "0eb67951-00cf-5b04-81cb-85dc8a56b3c8",
+  "deferral_sentence": "Post-operative anticoagulation will be addressed after surgery.",
+  "label": {
+    "decision": "NEEDS_FOLLOW_UP",
+    "categories": [
+      "ANTICOAGULATION_MANAGEMENT"
+    ],
+    "rationale": "He's on Coumadin, and the 03/15 cardiology note covers the front end well: stop warfarin 5 days out (last dose 03/15), INR check the day before, enoxaparin bridge. The post-op side is just \"will be addressed after surgery,\" though, so nobody has said when to restart the warfarin. That needs to come back before the 03/21 knee. The daily aspirin doesn't count here, and the pre-op H&P (03/09), signed consent and CBC from 02/25 (24 days out) are all fine."
+  },
+  "observed_v1_anticoagulation_plans": [
+    {
+      "value": {
+        "drug_name_raw": "warfarin",
+        "preop_instruction": "Stop warfarin 5 days before surgery (last dose 03/15/2026); check INR the day before surgery with goal <1.5.",
+        "preop_timing_raw": "5 days before surgery",
+        "postop_instruction": "Post-operative anticoagulation will be addressed after surgery.",
+        "is_hedged": false
+      },
+      "quote": "Stop warfarin 5 days before surgery (last dose 03/15/2026); check INR the day before surgery with goal <1.5. Bridge with enoxaparin 1 mg/kg SC q12h starting 3 days prior, last dose 24 hours pre-op. Post-operative anticoagulation will be addressed after surgery."
+    },
+    {
+      "value": {
+        "drug_name_raw": "enoxaparin",
+        "preop_instruction": "Bridge with enoxaparin 1 mg/kg SC q12h starting 3 days prior, last dose 24 hours pre-op.",
+        "preop_timing_raw": "3 days prior",
+        "postop_instruction": "Post-operative anticoagulation will be addressed after surgery.",
+        "is_hedged": false
+      },
+      "quote": "Stop warfarin 5 days before surgery (last dose 03/15/2026); check INR the day before surgery with goal <1.5. Bridge with enoxaparin 1 mg/kg SC q12h starting 3 days prior, last dose 24 hours pre-op. Post-operative anticoagulation will be addressed after surgery."
+    }
+  ],
+  "submission": {
+    "patient": {
+      "id": "a7e3f594-2e9e-53a5-91fd-ffca31539196",
+      "mrn": "MRN-3000020",
+      "name": {
+        "given": "James",
+        "family": "Nguyen"
+      },
+      "dob": "1964-01-02",
+      "sex": "M"
+    },
+    "procedure": {
+      "case_id": "case_00020",
+      "procedure_type": "Elective total knee arthroplasty",
+      "procedure_risk": "MODERATE",
+      "procedure_date": "2026-03-21",
+      "is_elective": true,
+      "location": "Cadence Surgical Center - Main OR"
+    },
+    "vitals": [
+      {
+        "type": "blood_pressure",
+        "systolic": 129,
+        "diastolic": 76,
+        "date": "2026-03-16T10:12:00Z",
+        "source": "Primary care visit"
+      },
+      {
+        "type": "temperature",
+        "value_f": 98.9,
+        "date": "2026-03-16T10:15:00Z",
+        "source": "Pre-op clinic"
+      },
+      {
+        "type": "blood_pressure",
+        "systolic": 127,
+        "diastolic": 78,
+        "date": "2026-03-09T09:05:00Z",
+        "source": "Pre-op clinic"
+      }
+    ],
+    "labs": [
+      {
+        "id": "86318943-c5ab-534c-86d2-a2c3e18b2f84",
+        "code": "CBC",
+        "display": "Hemogram/CBC",
+        "effective_at": "2026-02-25T07:58:00Z",
+        "status": "final",
+        "source": "Internal Hospital Lab"
+      },
+      {
+        "id": "13596bf5-f2cb-5e85-9030-d6af9344fc8d",
+        "code": "LAB-CBC",
+        "display": "Complete Blood Count w/ Differential",
+        "effective_at": "2026-01-18T08:38:00Z",
+        "status": "final",
+        "source": "External LabCorp"
+      },
+      {
+        "id": "abb13bc7-8045-5204-a29a-3546141885ce",
+        "code": "BMP",
+        "display": "Basic Metabolic Panel",
+        "effective_at": "2026-03-12T11:04:00Z",
+        "status": "final",
+        "source": "Internal Hospital Lab"
+      }
+    ],
+    "medications": [
+      {
+        "name": "omeprazole 20 mg PO daily",
+        "active": true
+      },
+      {
+        "name": "vitamin D3 2000 IU PO daily",
+        "active": true
+      },
+      {
+        "name": "Aspirin EC 81 mg PO daily",
+        "active": true
+      },
+      {
+        "name": "Coumadin 5 mg PO daily (INR goal 2-3)",
+        "active": true
+      }
+    ],
+    "conditions": [
+      {
+        "name": "Atrial fibrillation",
+        "active": true
+      }
+    ],
+    "documents": [
+      {
+        "doc_id": "0eb67951-00cf-5b04-81cb-85dc8a56b3c8",
+        "type": "Cardiology Progress Note",
+        "date": "2026-03-15",
+        "author": "Courtney T. Williams, MD",
+        "text": "CARDIOLOGY PROGRESS NOTE\nDate: 03/15/2026\nReason for consult: perioperative management of anticoagulation ahead of planned total knee arthroplasty.\n\nHPI: Patient with atrial fibrillation with prior TIA (CHA2DS2-VASc 3, HAS-BLED 1) maintained on warfarin 5 mg PO daily (INR goal 2-3). No history of major bleeding. Prior TIA without residual deficits; no stroke. Reports good adherence. Denies palpitations or presyncope.\n\nRenal function: creatinine 1.02 mg/dL, estimated CrCl 96 mL/min (Cockcroft-Gault).\nECG: sinus rhythm with first-degree AV block.\nEcho (2025): LVEF 61%, mild left atrial enlargement.\nRCRI: 2. Functional capacity >4 METs.\n\nASSESSMENT: Acceptable cardiac risk for the planned procedure. Bleeding risk of the procedure considered moderate. Thromboembolic risk moderate; bridging recommended given warfarin therapy.\n\nRECOMMENDATIONS:\n  1. Stop warfarin 5 days before surgery (last dose 03/15/2026); check INR the day before surgery with goal <1.5. Bridge with enoxaparin 1 mg/kg SC q12h starting 3 days prior, last dose 24 hours pre-op. Post-operative anticoagulation will be addressed after surgery.\n  2. Continue home beta-blocker through the perioperative period.\n  3. No further cardiac testing required prior to surgery.\n  4. Please call with questions."
+      },
+      {
+        "doc_id": "bfea860b-565f-5d3d-8d2a-374360e56a45",
+        "type": "Admission H&P",
+        "date": "2025-05-13",
+        "author": "Robert Ramirez, FNP-C",
+        "text": "HISTORY AND PHYSICAL\nDate of service: 05/13/2025\nEncounter: annual wellness / establish care\nHPI: 62-year-old male presenting to establish primary care. No acute complaints. Reports chronic bilateral knee pain, left worse than right of several months' duration, referred to Orthopedic Surgery for evaluation.\nPMH: Atrial fibrillation.\nEXAM: Well-appearing, no acute distress. Heart regular. Lungs clear. Abdomen benign.\nPLAN: Routine health maintenance. Follow up with specialist as scheduled."
+      },
+      {
+        "doc_id": "2f5fc768-eba3-55ea-9a28-871594225eff",
+        "type": "Nutrition Consult",
+        "date": "2026-03-03",
+        "author": "Nicole Park, DO",
+        "text": "BMI 36.38. Discussed protein intake goals of 1.2 g/kg/day pre-operatively and carbohydrate loading drink the evening before surgery per ERAS protocol. Diet recall shows irregular meals and low vegetable intake. Provided written materials on high-protein snacks; recommended oral nutrition supplement twice daily for 7 days pre-op."
+      },
+      {
+        "doc_id": "f3a0b3d9-d4ab-5a75-8778-9a4fe856957e",
+        "type": "Informed Consent - Surgical Procedure",
+        "date": "2026-03-10",
+        "author": "Jasmine O'Connor, DO",
+        "text": "INFORMED CONSENT FOR SURGICAL PROCEDURE\nCadence Surgical Center - Orthopedic Surgery\n\nProcedure: total knee arthroplasty\nSurgeon: Jasmine O'Connor, DO\n\nI, James Nguyen, authorize the surgeon named above and assistants to perform the procedure listed. The nature and purpose of the procedure, the anticipated benefits, and the reasonable alternatives have been explained to me. I understand the risks include, but are not limited to: failure to relieve symptoms, bleeding, nerve injury, infection, injury to surrounding structures. I understand that no guarantee has been made regarding the outcome.\n\nAnesthesia: I consent to the administration of anesthesia as deemed appropriate by the anesthesia team.\nBlood products: I do not consent to transfusion of blood products if medically necessary.\nTissue disposal: I consent to the disposal of any tissue removed in accordance with hospital policy.\n\nSigned by patient: James Nguyen, 03/10/2026 14:48. Witness: Nicole L. O'Connor.\n\nPhysician attestation: I have explained the nature of the procedure, its risks, benefits, and alternatives, and answered all questions. Electronically signed by Jasmine O'Connor, DO on 03/10/2026."
+      },
+      {
+        "doc_id": "7fdafa35-cfdb-5033-a0eb-3bd425419165",
+        "type": "Anesthesia Screening Note",
+        "date": "2026-03-14",
+        "author": "Olivia Rivera, DNP, FNP-BC",
+        "text": "PRE-ANESTHESIA EVALUATION\nDate: 03/14/2026\nProposed procedure: total knee arthroplasty\n\nASA physical status: II.\nAirway: Mallampati I, thyromental distance >3 FB, full dentition.\nSTOP-BANG: 2. No known OSA.\nPrior anesthesia: general anesthesia 2015 without complication.\n\nSYSTEMS REVIEW:\n  Cardiac: no angina, CHF, or known valvular disease.\n  Pulmonary: mild intermittent asthma, albuterol PRN.\n  GI: no reflux.\n  Renal/Endocrine: no renal or thyroid disease.\n  Neuro: chronic migraines.\n\nSurgical H&P reviewed; no interval changes reported by patient.\nNPO: reviewed standard fasting guidelines; no additional instructions.\nPlan: spinal anesthesia with sedation. Discussed anesthesia risks with patient including sore throat, dental injury, nausea, awareness, and rare serious cardiopulmonary events. Questions answered.\nPost-op disposition: ICU bed requested."
+      },
+      {
+        "doc_id": "2ace2018-11e3-54eb-b3c6-386c8970c914",
+        "type": "Preoperative History & Physical (H&P)",
+        "date": "2026-03-09",
+        "author": "Courtney J. Desai, NP",
+        "text": "HISTORY & PHYSICAL - PRE-OP\nDate of service: 03/09/2026\nPatient: James Nguyen    DOB: 01/02/1964\nPlanned procedure: total knee arthroplasty (scheduled for 03/21/2026)\n\nCHIEF COMPLAINT: Chronic bilateral knee pain, left worse than right.\n\nHISTORY OF PRESENT ILLNESS: 62-year-old male referred by Orthopedic Surgery for pre-operative evaluation prior to total knee arthroplasty. Radiographs show tricompartmental osteoarthritis with bone-on-bone medial joint space; failed injections, bracing, and NSAIDs. Patient denies recent illness, hospitalizations, or changes in medications over the past month. Functional capacity estimated at >4 METs (does yard work).\n\nPAST MEDICAL HISTORY: Atrial fibrillation.\nPAST SURGICAL HISTORY: Right shoulder arthroscopy 2018.\n\nMEDICATIONS:\n  - omeprazole 20 mg PO daily\n  - vitamin D3 2000 IU PO daily\n  - Aspirin EC 81 mg PO daily\n  - Coumadin 5 mg PO daily (INR goal 2-3)\nALLERGIES: Sulfa drugs (hives)\n\nSOCIAL HISTORY: Never smoker; drinks 1-2 glasses of wine weekly. Lives with spouse.\nFAMILY HISTORY: Father with MI at 68.\n\nREVIEW OF SYSTEMS: Negative for cough, dyspnea on exertion, dysuria, chest pain, syncope, melena, palpitations. All other systems reviewed and negative.\n\nPHYSICAL EXAM:\n  Vitals 10:05  BP 118/76 mmHg, HR 79, Temp: 97.4F, SpO2 95% RA\n  General: Alert, oriented, no acute distress.\n  Airway: Mallampati I, full neck range of motion.\n  CV: Regular rate and rhythm, no murmurs.\n  Lungs: Clear to auscultation bilaterally.\n  Abdomen: Soft, non-tender, non-distended.\n  Extremities: No edema.\n\nASSESSMENT AND PLAN:\n  62-year-old male being evaluated prior to total knee arthroplasty. Cardiac risk acceptable for planned surgery.\n  1. Total knee arthroplasty scheduled for 03/21/2026 with Orthopedic Surgery.\n  2. Pre-operative labs per protocol; results to be reviewed prior to surgery.\n  3. Continue home medications except as directed by perioperative instructions.\n  4. Risks and benefits of surgery discussed at a high level; formal consent per surgical team.\n\nElectronically signed by Courtney J. Desai on 03/09/2026."
+      },
+      {
+        "doc_id": "d1dae22c-b4f5-50a5-9a32-dd415e4be9e7",
+        "type": "Pre-Admission Testing Visit",
+        "date": "2026-03-18",
+        "author": "Tiffany F. Thompson, BSN, RN",
+        "text": "PRE-ADMISSION TESTING VISIT\nVisit date: 03/18/2026\nPlanned procedure: total knee arthroplasty\n\nVITAL SIGNS: See flowsheet.\n\nMEDICATION RECONCILIATION (patient-reported):\n  - omeprazole 20 mg PO daily - taking as prescribed\n  - vitamin D3 2000 IU PO daily - taking as prescribed\n  - Aspirin EC 81 mg PO daily - taking as prescribed\n  - Coumadin 5 mg PO daily (INR goal 2-3) - taking as prescribed\n\nALLERGIES reviewed and confirmed. Reports seasonal allergies; denies fever or productive cough.\n\nPAIN: 4/10 at right knee, managed with acetaminophen.\nSKIN: intact; no rashes, open wounds, or pressure injuries at the planned surgical site.\nFUNCTIONAL STATUS: independent; uses cane for longer distances.\nPRIOR ANESTHESIA: no personal or family history of malignant hyperthermia.\nADVANCE DIRECTIVE: patient declines to complete at this time. Health care proxy: son.\nPSYCHOSOCIAL: lives with family who will assist during recovery.\n\nNPO instructions: nothing to eat after midnight; clear liquids until 2 hours before arrival. Patient verbalized understanding.\nFall risk: low. Ride home arranged with friend.\nEducation provided on incentive spirometry, pain management expectations, and chlorhexidine skin prep."
+      }
+    ],
+    "metadata": {
+      "submission_received_at": "2026-03-21T14:22:10Z",
+      "source_system": "Cadence Intake API v2"
+    }
+  },
+  "replay_responses_resume_on_deferral": {
+    "_comment": "The real cached gpt-4o extraction of every case_00020 document, with each anticoagulation plan rewritten into the PreopAction/PostopAction schema. The post-op deferral sentence is labeled RESUME, reproducing the original mistake.",
+    "0eb67951-00cf-5b04-81cb-85dc8a56b3c8": {
+      "doc_metadata": {
+        "document_type": {
+          "value": "CONSULT_NOTE",
+          "quote": "CARDIOLOGY PROGRESS NOTE"
+        }
+      },
+      "patient_identifiers": [],
+      "hnp_details": null,
+      "consent_details": null,
+      "vitals_mentions": [],
+      "medication_mentions": [
+        {
+          "value": {
+            "drug_name_raw": "warfarin",
+            "status": "CURRENT"
+          },
+          "quote": "maintained on warfarin 5 mg PO daily (INR goal 2-3)."
+        }
+      ],
+      "anticoagulation_plans": [
+        {
+          "value": {
+            "drug_name_raw": "warfarin",
+            "preop_action": {
+              "value": "HOLD",
+              "quote": "Stop warfarin 5 days before surgery (last dose 03/15/2026); check INR the day before surgery with goal <1.5."
+            },
+            "preop_timing_raw": "5 days before surgery",
+            "postop_action": {
+              "value": "RESUME",
+              "quote": "Post-operative anticoagulation will be addressed after surgery."
+            },
+            "postop_timing_raw": null
+          },
+          "quote": "Stop warfarin 5 days before surgery (last dose 03/15/2026); check INR the day before surgery with goal <1.5. Bridge with enoxaparin 1 mg/kg SC q12h starting 3 days prior, last dose 24 hours pre-op. Post-operative anticoagulation will be addressed after surgery."
+        },
+        {
+          "value": {
+            "drug_name_raw": "enoxaparin",
+            "preop_action": {
+              "value": "BRIDGE",
+              "quote": "Bridge with enoxaparin 1 mg/kg SC q12h starting 3 days prior, last dose 24 hours pre-op."
+            },
+            "preop_timing_raw": "3 days prior",
+            "postop_action": {
+              "value": "RESUME",
+              "quote": "Post-operative anticoagulation will be addressed after surgery."
+            },
+            "postop_timing_raw": null
+          },
+          "quote": "Stop warfarin 5 days before surgery (last dose 03/15/2026); check INR the day before surgery with goal <1.5. Bridge with enoxaparin 1 mg/kg SC q12h starting 3 days prior, last dose 24 hours pre-op. Post-operative anticoagulation will be addressed after surgery."
+        }
+      ],
+      "lab_mentions": [],
+      "date_risk_mentions": [
+        {
+          "value": {
+            "kind": "PROCEDURE_DATE",
+            "raw_text": "ahead of planned total knee arthroplasty."
+          },
+          "quote": "ahead of planned total knee arthroplasty."
+        },
+        {
+          "value": {
+            "kind": "RISK_LEVEL",
+            "raw_text": "Bleeding risk of the procedure considered moderate."
+          },
+          "quote": "Bleeding risk of the procedure considered moderate."
+        }
+      ]
+    },
+    "bfea860b-565f-5d3d-8d2a-374360e56a45": {
+      "doc_metadata": {
+        "document_type": {
+          "value": "HISTORY_AND_PHYSICAL",
+          "quote": "HISTORY AND PHYSICAL"
+        }
+      },
+      "patient_identifiers": [],
+      "hnp_details": {
+        "completion": {
+          "value": "COMPLETE",
+          "quote": "HISTORY AND PHYSICAL\nDate of service: 05/13/2025\nEncounter: annual wellness / establish care\nHPI: 62-year-old male presenting to establish primary care. No acute complaints. Reports chronic bilateral knee pain, left worse than right of several months' duration, referred to Orthopedic Surgery for evaluation.\nPMH: Atrial fibrillation.\nEXAM: Well-appearing, no acute distress. Heart regular. Lungs clear. Abdomen benign.\nPLAN: Routine health maintenance. Follow up with specialist as scheduled."
+        },
+        "date_of_service": {
+          "value": "05/13/2025",
+          "quote": "Date of service: 05/13/2025"
+        }
+      },
+      "consent_details": null,
+      "vitals_mentions": [],
+      "medication_mentions": [],
+      "anticoagulation_plans": [],
+      "lab_mentions": [],
+      "date_risk_mentions": []
+    },
+    "2f5fc768-eba3-55ea-9a28-871594225eff": {
+      "doc_metadata": {
+        "document_type": {
+          "value": "OTHER",
+          "quote": "BMI 36.38. Discussed protein intake goals of 1.2 g/kg/day pre-operatively and carbohydrate loading drink the evening before surgery per ERAS protocol."
+        }
+      },
+      "patient_identifiers": [],
+      "hnp_details": null,
+      "consent_details": null,
+      "vitals_mentions": [],
+      "medication_mentions": [],
+      "anticoagulation_plans": [],
+      "lab_mentions": [],
+      "date_risk_mentions": []
+    },
+    "f3a0b3d9-d4ab-5a75-8778-9a4fe856957e": {
+      "doc_metadata": {
+        "document_type": {
+          "value": "SURGICAL_CONSENT",
+          "quote": "INFORMED CONSENT FOR SURGICAL PROCEDURE"
+        }
+      },
+      "patient_identifiers": [],
+      "hnp_details": null,
+      "consent_details": {
+        "signature_states": [
+          {
+            "value": "SIGNED",
+            "quote": "Signed by patient: James Nguyen, 03/10/2026 14:48."
+          }
+        ],
+        "procedure": {
+          "value": "total knee arthroplasty",
+          "quote": "Procedure: total knee arthroplasty"
+        }
+      },
+      "vitals_mentions": [],
+      "medication_mentions": [],
+      "anticoagulation_plans": [],
+      "lab_mentions": [],
+      "date_risk_mentions": []
+    },
+    "7fdafa35-cfdb-5033-a0eb-3bd425419165": {
+      "doc_metadata": {
+        "document_type": {
+          "value": "ANESTHESIA_ASSESSMENT",
+          "quote": "PRE-ANESTHESIA EVALUATION"
+        }
+      },
+      "patient_identifiers": [],
+      "hnp_details": null,
+      "consent_details": null,
+      "vitals_mentions": [],
+      "medication_mentions": [
+        {
+          "value": {
+            "drug_name_raw": "albuterol",
+            "status": "CURRENT"
+          },
+          "quote": "Pulmonary: mild intermittent asthma, albuterol PRN."
+        }
+      ],
+      "anticoagulation_plans": [],
+      "lab_mentions": [],
+      "date_risk_mentions": [
+        {
+          "value": {
+            "kind": "PROCEDURE_DATE",
+            "raw_text": "03/14/2026"
+          },
+          "quote": "Date: 03/14/2026"
+        }
+      ]
+    },
+    "2ace2018-11e3-54eb-b3c6-386c8970c914": {
+      "doc_metadata": {
+        "document_type": {
+          "value": "HISTORY_AND_PHYSICAL",
+          "quote": "HISTORY & PHYSICAL - PRE-OP"
+        }
+      },
+      "patient_identifiers": [
+        {
+          "value": {
+            "kind": "NAME",
+            "raw_value": "James Nguyen"
+          },
+          "quote": "Patient: James Nguyen"
+        },
+        {
+          "value": {
+            "kind": "DOB",
+            "raw_value": "01/02/1964"
+          },
+          "quote": "DOB: 01/02/1964"
+        }
+      ],
+      "hnp_details": {
+        "completion": {
+          "value": "COMPLETE",
+          "quote": "Electronically signed by Courtney J. Desai on 03/09/2026."
+        },
+        "date_of_service": {
+          "value": "03/09/2026",
+          "quote": "Date of service: 03/09/2026"
+        }
+      },
+      "consent_details": null,
+      "vitals_mentions": [
+        {
+          "value": {
+            "vital_type": "BLOOD_PRESSURE",
+            "raw_value": "118/76",
+            "raw_unit": "mmHg",
+            "time_raw": "10:05"
+          },
+          "quote": "Vitals 10:05  BP 118/76 mmHg, HR 79, Temp: 97.4F, SpO2 95% RA"
+        },
+        {
+          "value": {
+            "vital_type": "TEMPERATURE",
+            "raw_value": "97.4",
+            "raw_unit": "F",
+            "time_raw": "10:05"
+          },
+          "quote": "Vitals 10:05  BP 118/76 mmHg, HR 79, Temp: 97.4F, SpO2 95% RA"
+        }
+      ],
+      "medication_mentions": [
+        {
+          "value": {
+            "drug_name_raw": "omeprazole",
+            "status": "CURRENT"
+          },
+          "quote": "omeprazole 20 mg PO daily"
+        },
+        {
+          "value": {
+            "drug_name_raw": "vitamin D3",
+            "status": "CURRENT"
+          },
+          "quote": "vitamin D3 2000 IU PO daily"
+        },
+        {
+          "value": {
+            "drug_name_raw": "Aspirin EC",
+            "status": "CURRENT"
+          },
+          "quote": "Aspirin EC 81 mg PO daily"
+        },
+        {
+          "value": {
+            "drug_name_raw": "Coumadin",
+            "status": "CURRENT"
+          },
+          "quote": "Coumadin 5 mg PO daily (INR goal 2-3)"
+        }
+      ],
+      "anticoagulation_plans": [],
+      "lab_mentions": [],
+      "date_risk_mentions": [
+        {
+          "value": {
+            "kind": "PROCEDURE_DATE",
+            "raw_text": "total knee arthroplasty (scheduled for 03/21/2026)"
+          },
+          "quote": "Planned procedure: total knee arthroplasty (scheduled for 03/21/2026)"
+        },
+        {
+          "value": {
+            "kind": "PROCEDURE_DATE",
+            "raw_text": "Total knee arthroplasty scheduled for 03/21/2026 with Orthopedic Surgery."
+          },
+          "quote": "Total knee arthroplasty scheduled for 03/21/2026 with Orthopedic Surgery."
+        }
+      ]
+    },
+    "d1dae22c-b4f5-50a5-9a32-dd415e4be9e7": {
+      "doc_metadata": {
+        "document_type": {
+          "value": "OTHER",
+          "quote": "PRE-ADMISSION TESTING VISIT"
+        }
+      },
+      "patient_identifiers": [],
+      "hnp_details": null,
+      "consent_details": null,
+      "vitals_mentions": [],
+      "medication_mentions": [
+        {
+          "value": {
+            "drug_name_raw": "omeprazole",
+            "status": "CURRENT"
+          },
+          "quote": "omeprazole 20 mg PO daily - taking as prescribed"
+        },
+        {
+          "value": {
+            "drug_name_raw": "vitamin D3",
+            "status": "CURRENT"
+          },
+          "quote": "vitamin D3 2000 IU PO daily - taking as prescribed"
+        },
+        {
+          "value": {
+            "drug_name_raw": "Aspirin EC",
+            "status": "CURRENT"
+          },
+          "quote": "Aspirin EC 81 mg PO daily - taking as prescribed"
+        },
+        {
+          "value": {
+            "drug_name_raw": "Coumadin",
+            "status": "CURRENT"
+          },
+          "quote": "Coumadin 5 mg PO daily (INR goal 2-3) - taking as prescribed"
+        }
+      ],
+      "anticoagulation_plans": [],
+      "lab_mentions": [],
+      "date_risk_mentions": [
+        {
+          "value": {
+            "kind": "PROCEDURE_DATE",
+            "raw_text": "Planned procedure: total knee arthroplasty"
+          },
+          "quote": "Planned procedure: total knee arthroplasty"
+        }
+      ]
+    }
+  }
+}
