@@ -3,8 +3,9 @@ OUTPUT ?= data/baseline_outputs.jsonl
 REPORT ?= data/eval_report.json
 DETERMINISM_REPORT ?= data/determinism_report.json
 MODEL ?= gpt-4.1-mini
+SCORER_FLAGS ?=
 
-.PHONY: baseline evals determinism score report test all clean
+.PHONY: baseline evals determinism score report test typecheck all clean
 
 baseline:
 	uv run run_baseline.py \
@@ -12,11 +13,13 @@ baseline:
 		--output $(OUTPUT) \
 		--model $(MODEL)
 
+# Offline scorer (no network). Add SCORER_FLAGS=--fail-on-false-ready to gate on false READYs.
 evals:
-	uv run run_evals.py \
-		--input $(INPUT) \
+	uv run scorer.py \
+		--labels $(INPUT) \
 		--outputs $(OUTPUT) \
-		--report $(REPORT)
+		--report $(REPORT) \
+		$(SCORER_FLAGS)
 
 determinism:
 	uv run run_evals.py \
@@ -37,6 +40,15 @@ test:
 		--with 'pydantic>=2.8.0' \
 		--with 'pytest>=8.0.0' \
 		python -m pytest tests
+
+typecheck:
+	MYPYPATH=tests uv run \
+		--with 'pydantic>=2.8.0' \
+		--with 'pytest>=8.0.0' \
+		--with 'mypy>=1.10' \
+		mypy --strict --explicit-package-bases \
+		models.py engine.py scorer.py \
+		tests/fact_builders.py tests/test_engine.py tests/test_gold_cases.py tests/test_scorer.py
 
 all: baseline evals determinism score
 

@@ -46,11 +46,19 @@ export OPENAI_API_KEY="<your_api_key>"
 make baseline
 ```
 
-3. Run eval scoring:
+3. Run eval scoring (offline, no API key needed):
 
 ```bash
 make evals
+# gate on false READYs (exit status 2 if any):
+make evals SCORER_FLAGS=--fail-on-false-ready
 ```
+
+`make evals` runs `scorer.py`, which replaced the OpenAI Evals upload in
+`run_evals.py`. It prints a decision confusion matrix, the false-READY count
+(target 0), and precision/recall per issue category, and writes
+`data/eval_report.json` in the format `make report` / `make score` read.
+`run_evals.py` is still used for `make determinism` only.
 
 4. Run determinism check:
 
@@ -78,7 +86,18 @@ Run the unit tests with:
 
 ```bash
 make test
+make typecheck   # mypy --strict
 ```
+
+## Architecture (in progress)
+
+- `models.py`: strict output contract (`TriageResult`, `Issue`, `Evidence`) and
+  `ReconciledPatientFacts`, the merged JSON + document view the engine consumes.
+- `engine.py`: pure rule functions R0-R4 and `evaluate(facts) -> TriageResult`.
+  All policy thresholds and windows are constants at the top of the file.
+- `scorer.py`: offline scoring harness.
+- `tests/test_gold_cases.py`: hand-reconciled facts for 19 sample cases, checked
+  against their labels.
 
 ## Outputs
 
