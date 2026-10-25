@@ -30,7 +30,7 @@ from core import (
 
 ROOT = Path(__file__).resolve().parent
 
-DEFAULT_MODEL = "gpt-4.1-mini"
+DEFAULT_MODEL = "gpt-4o"
 TERMINAL_RUN_STATUSES = {"completed", "failed", "canceled"}
 PRIMARY_SCORE_NAME = "aggregate_local_score_pct"
 

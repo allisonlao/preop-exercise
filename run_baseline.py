@@ -7,7 +7,7 @@
 # ]
 # ///
 
-"""Run a baseline triage model on prepared pre-op submission packages."""
+"""Run the staged triage pipeline (core.triage_submission) on prepared pre-op submission packages."""
 
 from __future__ import annotations
 
@@ -17,20 +17,18 @@ import json
 from pathlib import Path
 from typing import Any
 
-from core import (
-    PatientSubmission,
-    triage_submission,
-)
+from core import triage_submission
 
 ROOT = Path(__file__).resolve().parent
 
-DEFAULT_MODEL = "gpt-4.1-mini"
+DEFAULT_MODEL = "gpt-4o"
 
 
 @dataclass
 class BaselineInputCase:
     case_id: str
-    submission: PatientSubmission
+    # Raw JSON as submitted: Stage 2 parses and reports malformed fields itself.
+    submission: dict[str, Any]
 
 
 def parse_args() -> argparse.Namespace:
@@ -72,15 +70,9 @@ def load_cases(path: Path) -> list[BaselineInputCase]:
                 and "submission" in payload
                 and "case_id" in payload
             ):
-                case = BaselineInputCase(
-                    case_id=str(payload["case_id"]),
-                    submission=PatientSubmission.model_validate(payload["submission"]),
-                )
+                case = BaselineInputCase(case_id=str(payload["case_id"]), submission=payload["submission"])
             else:
-                case = BaselineInputCase(
-                    case_id=f"case_{idx:05d}",
-                    submission=PatientSubmission.model_validate(payload),
-                )
+                case = BaselineInputCase(case_id=f"case_{idx:05d}", submission=payload)
             cases.append(case)
     return cases
 
@@ -98,8 +90,8 @@ def main() -> None:
 
     with output_path.open("w", encoding="utf-8") as handle:
         for idx, case in enumerate(cases):
-            print(f"[{idx + 1}/{len(cases)}] Running baseline inference")
-            submission = case.submission.model_dump()
+            print(f"[{idx + 1}/{len(cases)}] Running triage pipeline")
+            submission = case.submission
             row: dict[str, Any] = {
                 "record_index": idx,
                 "case_id": case.case_id,

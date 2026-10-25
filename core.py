@@ -1,56 +1,48 @@
-"""Shared policy, schema, and prompt helpers for the pre-op triage scripts."""
+"""Pre-op triage pipeline entry point and submission schema.
+
+``triage_submission`` runs the staged pipeline for one submission:
+
+1. ``preprocess.preprocess_submission``: structured JSON -> typed facts (Stage 2).
+2. For every document: ``extract.extract_document`` (cached LLM call, Stage 3)
+   then ``verify.verify_extracted_document`` (deterministic quote check).
+3. ``reconcile.reconcile_patient_facts``: merge into engine input (Stage 4).
+4. ``engine.evaluate``: the pure policy rules (Stage 1).
+5. ``packet.build_output``: the sorted, reviewer-facing evidence packet.
+
+Without an API key the extractor serves cached responses from
+``data/llm_cache.json``; any document with no cached response is marked
+FAILED and the case fails closed (MISSING_REQUIRED_DATA / EXTRACTION_FAILED).
+Nothing in the output depends on the clock or on run order.
+"""
 
 from __future__ import annotations
 
-import json
-from typing import Literal
+import os
+from collections.abc import Mapping
+from typing import Any, Literal
 
-from pydantic import AliasChoices, BaseModel, Field
+from openai import OpenAI
+from pydantic import BaseModel, Field
 
-# -------------------------
-# Policy + system prompt
-# -------------------------
+from engine import evaluate
+from extract import DEFAULT_MODEL, ExtractionCache, extract_document
+from packet import EvidenceItem, PassedCheck, TriageIssue, TriageOutput, build_output
+from preprocess import preprocess_submission
+from reconcile import reconcile_patient_facts
+from schemas import ExtractedDocument
+from verify import verify_extracted_document
 
-BASELINE_SYSTEM_PROMPT = """
-You are a clinical operations assistant for pre-op scheduling triage.
-Base decisions only on the policy below. General clinical knowledge may be used to interpret the record (e.g., drug brand names, unit conversions), not to add criteria.
-
-Cadence Surgical Center Pre-Operative Scheduling Policy (effective Jan 1, 2026)
-
-Output exactly one status:
-- READY
-- NEEDS_FOLLOW_UP
-- NOT_CLEARED
-
-Rule 1: Required documentation
-- History and Physical (H&P) must exist and be completed within 30 days of procedure date.
-- Signed Surgical Consent must exist.
-If documentation is missing/outdated -> NEEDS_FOLLOW_UP.
-
-Rule 2: Required testing by procedure risk
-- LOW or MODERATE risk: CBC within 30 days of procedure date.
-- HIGH risk: CBC within 14 days and CMP within 14 days.
-Use only the most recent result for each required test.
-If a required test is missing or outside window -> NEEDS_FOLLOW_UP.
-
-Rule 3: Anticoagulation management
-If the patient is currently taking an anticoagulant, a perioperative anticoagulation plan must be documented and clear.
-If no clear plan is documented -> NEEDS_FOLLOW_UP.
-
-Rule 4: Acute safety exclusions
-If any of the following are present at review time -> NOT_CLEARED:
-- Systolic BP >= 180 mmHg
-- Diastolic BP >= 110 mmHg
-- Temperature > 100.4 F
-Use the most recent relevant vital.
-
-Final determination
-- READY only if all required criteria are satisfied and no exclusions are present.
-- If a required field needed to evaluate a rule is missing/unknown -> NEEDS_FOLLOW_UP.
-
-Output requirements
-- Return exactly one JSON object.
-""".strip()
+__all__ = [
+    "DEFAULT_MODEL",
+    "EvidenceItem",
+    "PassedCheck",
+    "PatientSubmission",
+    "TriageIssue",
+    "TriageOutput",
+    "default_client",
+    "extract_documents",
+    "triage_submission",
+]
 
 Decision = Literal["READY", "NEEDS_FOLLOW_UP", "NOT_CLEARED"]
 ProcedureRisk = Literal["LOW", "MODERATE", "HIGH"]
@@ -155,83 +147,66 @@ class PatientSubmission(BaseModel):
     documents: list[Document] = Field(default_factory=list)
     metadata: SubmissionMetadata | None = None
 
-class TriageIssue(BaseModel):
-
-    category: IssueCategory
-    evidence: str
-
-class TriageOutput(BaseModel):
-    """Structured output contract for triage responses."""
-
-    decision: Decision
-    issues: list[TriageIssue] = Field(validation_alias=AliasChoices("issues"))
-    explanation: str
-
-
-def triage_output_json_schema() -> dict[str, object]:
-    """Return the JSON schema used for structured model outputs."""
-
-    schema = TriageOutput.model_json_schema()
-    return schema
-
 
 # -------------------------
-# Prompt helpers
+# Pipeline
 # -------------------------
 
 
-def build_user_prompt(submission: dict[str, object]) -> str:
-    """Format a single submission package as user input."""
+def default_client() -> OpenAI | None:
+    """An OpenAI client when ``OPENAI_API_KEY`` is set, else None (cache-only mode)."""
 
-    sections = [
-        "Evaluate this patient package for pre-op scheduling readiness using the provided policy.",
-        "Return your response as JSON.",
-        "Submission JSON:",
-        json.dumps(submission, sort_keys=True),
-    ]
-    return "\n".join(sections)
+    return OpenAI() if os.environ.get("OPENAI_API_KEY") else None
+
+
+def extract_documents(
+    submission: Mapping[str, Any],
+    client: OpenAI | None,
+    *,
+    model: str,
+    cache: ExtractionCache | None = None,
+) -> list[ExtractedDocument]:
+    """Extract and quote-verify every document, one LLM call (or cache hit) each.
+
+    Documents without a ``doc_id`` are skipped here; Stage 2 reports them as
+    malformed and reconciliation fails closed on them. A document with no text
+    is returned as FAILED.
+    """
+
+    raw_documents = submission.get("documents")
+    extracted: list[ExtractedDocument] = []
+    for raw in raw_documents if isinstance(raw_documents, list) else []:
+        if not isinstance(raw, Mapping):
+            continue
+        doc_id = raw.get("doc_id")
+        if not isinstance(doc_id, str) or not doc_id.strip():
+            continue
+        text = raw.get("text")
+        if not isinstance(text, str) or not text.strip():
+            extracted.append(ExtractedDocument.failed(doc_id, "document has no text"))
+            continue
+        document = extract_document(text, doc_id, client, model=model, cache=cache)
+        extracted.append(verify_extracted_document(document, text))
+    return extracted
 
 
 def triage_submission(
-    submission: dict[str, object] | PatientSubmission,
+    submission: Mapping[str, Any] | PatientSubmission,
     *,
-    model: str,
+    model: str = DEFAULT_MODEL,
+    client: OpenAI | None = None,
+    cache: ExtractionCache | None = None,
 ) -> TriageOutput:
-    """Naive baseline implementation: single LLM call with JSON response output."""
+    """Run the full pipeline for one submission. Never calls the LLM for policy logic.
 
-    # Import lazily so core utilities remain usable without OpenAI installed.
-    from openai import OpenAI
+    ``client`` defaults to ``default_client()``. The raw mapping is used as-is
+    (no lossy re-validation), so malformed fields reach Stage 2 and are reported.
+    """
 
-    if isinstance(submission, PatientSubmission):
-        submission_payload = submission.model_dump()
-    else:
-        submission_payload = PatientSubmission.model_validate(submission).model_dump()
-
-    client = OpenAI()
-    request_kwargs: dict[str, object] = {
-        "model": model,
-        "instructions": BASELINE_SYSTEM_PROMPT,
-        "input": [
-            {
-                "type": "message",
-                "role": "user",
-                "content": [
-                    {
-                        "type": "input_text",
-                        "text": build_user_prompt(submission_payload),
-                    }
-                ],
-            }
-        ],
-        "text": {
-            "format": {
-                "type": "json_schema",
-                "name": "preop_triage_output",
-                "schema": triage_output_json_schema(),
-                "strict": False,
-            }
-        },
-    }
-
-    response = client.responses.create(**request_kwargs)
-    return TriageOutput.model_validate_json(response.output_text)
+    payload: Mapping[str, Any] = (
+        submission.model_dump() if isinstance(submission, PatientSubmission) else submission
+    )
+    structured = preprocess_submission(payload)
+    documents = extract_documents(payload, client if client is not None else default_client(), model=model, cache=cache)
+    facts = reconcile_patient_facts(structured, documents)
+    return build_output(facts, evaluate(facts))
