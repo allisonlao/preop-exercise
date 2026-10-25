@@ -31,6 +31,12 @@ Note: this exercise is evaluated on engineering judgment. You may not reach a 10
 uv --version
 ```
 
+**(If you don't have uv installed already, run:
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.local/bin/env
+```
+
 2. Set your OpenAI API key.
 
 ```bash
