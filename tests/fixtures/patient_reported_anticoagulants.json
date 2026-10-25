@@ -1,0 +1,1290 @@
+{
+  "_comment": "Real gpt-4o extractions (cache of commit fabd087) for the three cases whose nursing note reports an anticoagulant missing from the medication list. extracted_status is what the model returned for that sentence.",
+  "case_00000": {
+    "label": {
+      "decision": "READY",
+      "categories": [],
+      "rationale": "Xarelto 20 mg isn't on the med list, but the 02/26 pre-admission nursing note says she's taking it, so I treated her as anticoagulated. The 02/20 cardiology consult covers it: hold Xarelto for the 2 days before surgery (last dose 02/26) and resume 24-48 hours after. Pre-op H&P from 02/21 (8 days out), consent for carpal tunnel release signed by the patient 02/27, CBC 02/11 (18 days) and latest vitals of 119/73 and 97.9 F are all fine."
+    },
+    "reported_quote": "- Patient also reports taking Xarelto 20 mg (daily with evening meal), prescribed by an outside cardiologist; not on the reconciled medication list - flagged for provider review.",
+    "extracted_status": "UNCLEAR",
+    "submission": {
+      "patient": {
+        "id": "14401b46-16cf-5c04-b43a-fec3e8485985",
+        "mrn": "MRN-3000000",
+        "name": {
+          "given": "Grace",
+          "family": "Lopez"
+        },
+        "dob": "1941-01-01",
+        "sex": "F"
+      },
+      "procedure": {
+        "case_id": "case_00000",
+        "procedure_type": "Elective carpal tunnel release",
+        "procedure_risk": "LOW",
+        "procedure_date": "2026-03-01",
+        "is_elective": true,
+        "location": "Cadence Surgical Center - Main OR"
+      },
+      "vitals": [
+        {
+          "type": "blood_pressure",
+          "systolic": 130,
+          "diastolic": 79,
+          "date": "2026-02-17T09:05:00Z",
+          "source": "Pre-op clinic"
+        },
+        {
+          "type": "blood_pressure",
+          "systolic": 119,
+          "diastolic": 73,
+          "date": "2026-02-24T10:12:00Z",
+          "source": "Primary care visit"
+        },
+        {
+          "type": "temperature",
+          "value_f": 97.9,
+          "date": "2026-02-24T10:15:00Z",
+          "source": "Nursing triage"
+        }
+      ],
+      "labs": [
+        {
+          "id": "2abe0298-7939-5cc0-8b39-66ac8bfda0bf",
+          "code": "TSH",
+          "display": "Thyroid Stimulating Hormone",
+          "effective_at": "2026-02-11T08:08:00Z",
+          "status": "final",
+          "source": "Internal Hospital Lab"
+        },
+        {
+          "id": "c5e31a21-b183-5c12-96e3-bca86b7e00f0",
+          "code": "CBC",
+          "display": "Hemogram/CBC",
+          "effective_at": "2026-02-11T11:29:00Z",
+          "status": "final",
+          "source": "Regional Reference Lab"
+        },
+        {
+          "id": "151c96f2-c8de-50fb-a127-3f425b252251",
+          "code": "LAB-BMP",
+          "display": "Basic Metabolic Panel w/ eGFR",
+          "effective_at": "2026-02-05T09:15:00Z",
+          "status": "final",
+          "source": "Regional Reference Lab"
+        },
+        {
+          "id": "25e0c703-453d-56f0-834b-2ff17ae6c117",
+          "code": "LAB-CBC",
+          "display": "Complete Blood Count w/ Differential",
+          "effective_at": "2026-01-06T10:14:00Z",
+          "status": "final",
+          "source": "Quest Diagnostics"
+        }
+      ],
+      "medications": [
+        {
+          "name": "tamsulosin 0.4 mg PO nightly",
+          "active": true
+        },
+        {
+          "name": "atorvastatin 40 mg PO nightly",
+          "active": true
+        }
+      ],
+      "conditions": [
+        {
+          "name": "Atrial fibrillation",
+          "active": true
+        }
+      ],
+      "documents": [
+        {
+          "doc_id": "c92f23f5-bc1f-54cb-911f-c719bc7df37b",
+          "type": "Surgery Consent (scanned)",
+          "date": "2026-02-27",
+          "author": "Kevin A. Lee, MD",
+          "text": "INFORMED CONSENT FOR SURGICAL PROCEDURE\nCadence Surgical Center - Hand Surgery\n\nProcedure: carpal tunnel release\nSurgeon: Kevin A. Lee, MD\n\nI, Grace Lopez, authorize the surgeon named above and assistants to perform the procedure listed. The nature and purpose of the procedure, the anticipated benefits, and the reasonable alternatives have been explained to me. I understand the risks include, but are not limited to: scarring, infection, nerve injury, failure to relieve symptoms, anesthesia complications. I understand that no guarantee has been made regarding the outcome.\n\nAnesthesia: I consent to the administration of anesthesia as deemed appropriate by the anesthesia team.\nBlood products: I consent to transfusion of blood products if medically necessary.\nTissue disposal: I consent to the disposal of any tissue removed in accordance with hospital policy.\n\nPatient signature: /s/ Grace Lopez (electronically signed 02/27/2026 08:05)\n\nPhysician attestation: I have explained the nature of the procedure, its risks, benefits, and alternatives, and answered all questions. Electronically signed by Kevin A. Lee, MD on 02/27/2026."
+        },
+        {
+          "doc_id": "bdb55172-db02-5721-a48e-81b81b300312",
+          "type": "Clinic Follow-up Note",
+          "date": "2026-02-24",
+          "author": "Rachel Desai, PA-C",
+          "text": "Routine follow-up. Chronic conditions stable. No medication changes today. Patient asked about timing of surgery; advised to coordinate with the surgeon's scheduler. Reviewed recent home glucose and blood pressure logs brought by patient; values within goal per patient report. Discussed sleep hygiene and gradual increase in daily walking."
+        },
+        {
+          "doc_id": "ffd06a2d-6fc3-5243-9189-6054e87f1c86",
+          "type": "Cardiology Consultation",
+          "date": "2026-02-20",
+          "author": "Lauren Q. Chen, DO",
+          "text": "CARDIOLOGY CONSULTATION - PERIOPERATIVE\nDate: 02/20/2026\nReason for consult: perioperative management of anticoagulation ahead of planned carpal tunnel release.\n\nHPI: Patient with persistent atrial fibrillation (CHA2DS2-VASc 2, HAS-BLED 2) maintained on Xarelto 20 mg PO daily with evening meal. No history of major bleeding. No stroke or TIA. Reports good adherence. Rate well controlled on current regimen.\n\nRenal function: creatinine 1.25 mg/dL, estimated CrCl 101 mL/min (Cockcroft-Gault).\nECG: sinus rhythm, rate 68, no acute ST changes.\nEcho (last year): LVEF 60%, no significant valvular disease.\nRCRI: 1. Functional capacity >4 METs.\n\nASSESSMENT: Acceptable cardiac risk for the planned procedure. Bleeding risk of the procedure considered low-to-moderate. Thromboembolic risk low; bridging not indicated for DOAC therapy.\n\nRECOMMENDATIONS:\n  1. Hold Xarelto for the 2 days before surgery (last dose 02/26/2026; no doses in the 48 hours prior). Resume Xarelto 24-48 hours after surgery once hemostasis is secure, per surgical team.\n  2. Continue atorvastatin through the perioperative period.\n  3. No further cardiac testing required prior to surgery.\n  4. Please call with questions."
+        },
+        {
+          "doc_id": "43d8b80c-0050-5954-a60a-4964b07f0ae3",
+          "type": "Clinic Follow-up Note",
+          "date": "2026-01-29",
+          "author": "Megan Brown, APRN",
+          "text": "Routine follow-up. Chronic conditions stable. No medication changes today. Patient asked about timing of surgery; advised to coordinate with the surgeon's scheduler. Reviewed recent home glucose and blood pressure logs brought by patient; values within goal per patient report. Discussed sleep hygiene and gradual increase in daily walking."
+        },
+        {
+          "doc_id": "0e230e4e-469c-503f-9ad7-9ce6d086ab84",
+          "type": "Nursing Pre-procedure Assessment",
+          "date": "2026-02-26",
+          "author": "Andrew Carter, RN",
+          "text": "PRE-ADMISSION TESTING VISIT\nVisit date: 02/26/2026\nPlanned procedure: carpal tunnel release\n\nVITAL SIGNS: See flowsheet.\n\nMEDICATION RECONCILIATION (patient-reported):\n  - tamsulosin 0.4 mg PO nightly - taking as prescribed\n  - atorvastatin 40 mg PO nightly - taking as prescribed\n  - Patient also reports taking Xarelto 20 mg (daily with evening meal), prescribed by an outside cardiologist; not on the reconciled medication list - flagged for provider review.\n\nALLERGIES reviewed and confirmed. Denies fever, chills, cough, or recent illness.\n\nPAIN: 4/10 at lower back, managed with acetaminophen.\nSKIN: intact; no rashes, open wounds, or pressure injuries at the planned surgical site.\nFUNCTIONAL STATUS: independent with ADLs.\nPRIOR ANESTHESIA: uncomplicated general anesthesia in the past.\nADVANCE DIRECTIVE: patient declines to complete at this time. Health care proxy: sibling.\nPSYCHOSOCIAL: reports mild anxiety about surgery; coping strategies discussed.\n\nNPO instructions: nothing to eat after midnight; clear liquids until 2 hours before arrival. Patient verbalized understanding.\nFall risk: moderate. Ride home arranged with friend.\nEducation provided on incentive spirometry, pain management expectations, and chlorhexidine skin prep."
+        },
+        {
+          "doc_id": "73f7bbbc-b6c0-563e-997f-327cf0c76302",
+          "type": "Anesthesia Screening Note",
+          "date": "2026-02-22",
+          "author": "Stephanie Rodriguez, MSN, NP-C",
+          "text": "ANESTHESIA PRE-ASSESSMENT\nDate: 02/22/2026\nProposed procedure: carpal tunnel release\n\nASA physical status: II.\nAirway: Mallampati I, thyromental distance >3 FB, full dentition.\nSTOP-BANG: 4. No known OSA.\nPrior anesthesia: no prior anesthetics.\n\nSYSTEMS REVIEW:\n  Cardiac: no exertional symptoms.\n  Pulmonary: no asthma or COPD.\n  GI: no reflux.\n  Renal/Endocrine: no renal or thyroid disease.\n  Neuro: chronic migraines.\n\nSurgical H&P reviewed; no interval changes reported by patient.\nNPO: reviewed standard fasting guidelines; hold oral hypoglycemics morning of surgery.\nPlan: general anesthesia with ETT. Discussed anesthesia risks with patient including sore throat, dental injury, nausea, awareness, and rare serious cardiopulmonary events. Questions answered.\nPost-op disposition: ICU bed requested."
+        },
+        {
+          "doc_id": "cb2e2b18-9cce-528a-9dd7-5353a0027b52",
+          "type": "History and Physical",
+          "date": "2026-02-21",
+          "author": "Brian O'Connor, MD",
+          "text": "PREOPERATIVE HISTORY AND PHYSICAL\nDate of service: 02/21/2026\nPatient: Grace Lopez    DOB: 01/01/1941\nPlanned procedure: carpal tunnel release (scheduled for 03/01/2026)\n\nCHIEF COMPLAINT: Numbness and tingling of the left hand.\n\nHISTORY OF PRESENT ILLNESS: 85-year-old female referred by Hand Surgery for pre-operative evaluation prior to carpal tunnel release. EMG/NCS confirmed moderate-to-severe median neuropathy at the wrist; nocturnal symptoms have not improved with splinting. Patient denies recent illness, hospitalizations, or changes in medications over the past month. Functional capacity estimated at approximately 4 METs (walks one block briskly).\n\nPAST MEDICAL HISTORY: Atrial fibrillation.\nPAST SURGICAL HISTORY: None.\n\nMEDICATIONS:\n  - tamsulosin 0.4 mg PO nightly\n  - atorvastatin 40 mg PO nightly\nALLERGIES: Codeine (nausea)\n\nSOCIAL HISTORY: Never smoker. Retired teacher.\nFAMILY HISTORY: Mother with breast cancer.\n\nREVIEW OF SYSTEMS: Negative for dysuria, night sweats, easy bruising, cough, melena, hematochezia, chills. All other systems reviewed and negative.\n\nPHYSICAL EXAM:\n  Vitals 10:05  BP 127/74, HR 68, T 98.0 F, SpO2 97% RA\n  General: Alert, oriented, no acute distress.\n  Airway: Mallampati II, full neck range of motion.\n  CV: Irregularly irregular rhythm, rate controlled, no murmurs.\n  Lungs: Clear to auscultation bilaterally.\n  Abdomen: Soft, non-tender, non-distended.\n  Extremities: No edema.\n\nASSESSMENT AND PLAN:\n  85-year-old female being evaluated prior to carpal tunnel release. Cardiac risk acceptable for planned surgery.\n  1. Carpal tunnel release scheduled for 03/01/2026 with Hand Surgery.\n  2. Pre-operative labs per protocol; results to be reviewed prior to surgery.\n  3. Continue home medications except as directed by perioperative instructions.\n  4. Risks and benefits of surgery discussed at a high level; formal consent per surgical team.\n\nElectronically signed by Brian O'Connor on 02/21/2026."
+        },
+        {
+          "doc_id": "517b3a8f-e994-558a-95fb-b093a650077d",
+          "type": "Admission H&P",
+          "date": "2025-07-20",
+          "author": "Andrew Nguyen, NP",
+          "text": "HISTORY AND PHYSICAL\nDate of service: 07/20/2025\nEncounter: annual wellness / establish care\nHPI: 85-year-old female presenting to establish primary care. No acute complaints. Reports numbness and tingling of the left hand of several months' duration, referred to Hand Surgery for evaluation.\nPMH: Atrial fibrillation.\nEXAM: Well-appearing, no acute distress. Heart regular. Lungs clear. Abdomen benign.\nPLAN: Routine health maintenance. Follow up with specialist as scheduled."
+        }
+      ],
+      "metadata": {
+        "submission_received_at": "2026-03-01T14:22:10Z",
+        "source_system": "Cadence Intake API v2"
+      }
+    },
+    "responses": {
+      "c92f23f5-bc1f-54cb-911f-c719bc7df37b": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "SURGICAL_CONSENT",
+            "quote": "INFORMED CONSENT FOR SURGICAL PROCEDURE"
+          }
+        },
+        "patient_identifiers": [],
+        "hnp_details": null,
+        "consent_details": {
+          "signature_states": [
+            {
+              "value": "SIGNED",
+              "quote": "Patient signature: /s/ Grace Lopez (electronically signed 02/27/2026 08:05)"
+            }
+          ],
+          "procedure": {
+            "value": "carpal tunnel release",
+            "quote": "Procedure: carpal tunnel release"
+          }
+        },
+        "vitals_mentions": [],
+        "medication_mentions": [],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": []
+      },
+      "bdb55172-db02-5721-a48e-81b81b300312": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "OTHER",
+            "quote": "Routine follow-up. Chronic conditions stable."
+          }
+        },
+        "patient_identifiers": [],
+        "hnp_details": null,
+        "consent_details": null,
+        "vitals_mentions": [],
+        "medication_mentions": [],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": []
+      },
+      "ffd06a2d-6fc3-5243-9189-6054e87f1c86": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "CONSULT_NOTE",
+            "quote": "CARDIOLOGY CONSULTATION - PERIOPERATIVE"
+          }
+        },
+        "patient_identifiers": [],
+        "hnp_details": null,
+        "consent_details": null,
+        "vitals_mentions": [],
+        "medication_mentions": [
+          {
+            "value": {
+              "drug_name_raw": "Xarelto",
+              "status": "CURRENT"
+            },
+            "quote": "Patient with persistent atrial fibrillation (CHA2DS2-VASc 2, HAS-BLED 2) maintained on Xarelto 20 mg PO daily with evening meal."
+          },
+          {
+            "value": {
+              "drug_name_raw": "atorvastatin",
+              "status": "CURRENT"
+            },
+            "quote": "Continue atorvastatin through the perioperative period."
+          }
+        ],
+        "anticoagulation_plans": [
+          {
+            "value": {
+              "drug_name_raw": "Xarelto",
+              "preop_action": {
+                "value": "HOLD",
+                "quote": "Hold Xarelto for the 2 days before surgery (last dose 02/26/2026; no doses in the 48 hours prior)."
+              },
+              "preop_timing_raw": "2 days before",
+              "postop_action": {
+                "value": "RESUME",
+                "quote": "Resume Xarelto 24-48 hours after surgery once hemostasis is secure, per surgical team."
+              },
+              "postop_timing_raw": "24-48 hours after surgery"
+            },
+            "quote": "Hold Xarelto for the 2 days before surgery (last dose 02/26/2026; no doses in the 48 hours prior). Resume Xarelto 24-48 hours after surgery once hemostasis is secure, per surgical team."
+          }
+        ],
+        "lab_mentions": [
+          {
+            "value": {
+              "test_name_raw": "creatinine",
+              "date_raw": null,
+              "result_raw": "1.25 mg/dL"
+            },
+            "quote": "Renal function: creatinine 1.25 mg/dL, estimated CrCl 101 mL/min (Cockcroft-Gault)."
+          }
+        ],
+        "date_risk_mentions": [
+          {
+            "value": {
+              "kind": "RISK_LEVEL",
+              "raw_text": "Bleeding risk of the procedure considered low-to-moderate."
+            },
+            "quote": "Bleeding risk of the procedure considered low-to-moderate."
+          }
+        ]
+      },
+      "43d8b80c-0050-5954-a60a-4964b07f0ae3": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "OTHER",
+            "quote": "Routine follow-up. Chronic conditions stable."
+          }
+        },
+        "patient_identifiers": [],
+        "hnp_details": null,
+        "consent_details": null,
+        "vitals_mentions": [],
+        "medication_mentions": [],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": []
+      },
+      "0e230e4e-469c-503f-9ad7-9ce6d086ab84": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "OTHER",
+            "quote": "PRE-ADMISSION TESTING VISIT"
+          }
+        },
+        "patient_identifiers": [],
+        "hnp_details": null,
+        "consent_details": null,
+        "vitals_mentions": [],
+        "medication_mentions": [
+          {
+            "value": {
+              "drug_name_raw": "tamsulosin",
+              "status": "CURRENT"
+            },
+            "quote": "- tamsulosin 0.4 mg PO nightly - taking as prescribed"
+          },
+          {
+            "value": {
+              "drug_name_raw": "atorvastatin",
+              "status": "CURRENT"
+            },
+            "quote": "- atorvastatin 40 mg PO nightly - taking as prescribed"
+          },
+          {
+            "value": {
+              "drug_name_raw": "Xarelto",
+              "status": "UNCLEAR"
+            },
+            "quote": "- Patient also reports taking Xarelto 20 mg (daily with evening meal), prescribed by an outside cardiologist; not on the reconciled medication list - flagged for provider review."
+          }
+        ],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": [
+          {
+            "value": {
+              "kind": "PROCEDURE_DATE",
+              "raw_text": "Planned procedure: carpal tunnel release"
+            },
+            "quote": "Planned procedure: carpal tunnel release"
+          }
+        ]
+      },
+      "73f7bbbc-b6c0-563e-997f-327cf0c76302": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "ANESTHESIA_ASSESSMENT",
+            "quote": "ANESTHESIA PRE-ASSESSMENT"
+          }
+        },
+        "patient_identifiers": [],
+        "hnp_details": null,
+        "consent_details": null,
+        "vitals_mentions": [],
+        "medication_mentions": [],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": [
+          {
+            "value": {
+              "kind": "PROCEDURE_DATE",
+              "raw_text": "Date: 02/22/2026"
+            },
+            "quote": "Date: 02/22/2026"
+          }
+        ]
+      },
+      "cb2e2b18-9cce-528a-9dd7-5353a0027b52": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "HISTORY_AND_PHYSICAL",
+            "quote": "PREOPERATIVE HISTORY AND PHYSICAL"
+          }
+        },
+        "patient_identifiers": [
+          {
+            "value": {
+              "kind": "NAME",
+              "raw_value": "Grace Lopez"
+            },
+            "quote": "Patient: Grace Lopez"
+          },
+          {
+            "value": {
+              "kind": "DOB",
+              "raw_value": "01/01/1941"
+            },
+            "quote": "DOB: 01/01/1941"
+          }
+        ],
+        "hnp_details": {
+          "completion": {
+            "value": "COMPLETE",
+            "quote": "Electronically signed by Brian O'Connor on 02/21/2026."
+          },
+          "date_of_service": {
+            "value": "02/21/2026",
+            "quote": "Date of service: 02/21/2026"
+          }
+        },
+        "consent_details": null,
+        "vitals_mentions": [
+          {
+            "value": {
+              "vital_type": "BLOOD_PRESSURE",
+              "raw_value": "127/74",
+              "raw_unit": "mmHg",
+              "time_raw": "10:05"
+            },
+            "quote": "Vitals 10:05  BP 127/74, HR 68, T 98.0 F, SpO2 97% RA"
+          },
+          {
+            "value": {
+              "vital_type": "TEMPERATURE",
+              "raw_value": "98.0",
+              "raw_unit": "F",
+              "time_raw": "10:05"
+            },
+            "quote": "Vitals 10:05  BP 127/74, HR 68, T 98.0 F, SpO2 97% RA"
+          }
+        ],
+        "medication_mentions": [
+          {
+            "value": {
+              "drug_name_raw": "tamsulosin",
+              "status": "CURRENT"
+            },
+            "quote": "tamsulosin 0.4 mg PO nightly"
+          },
+          {
+            "value": {
+              "drug_name_raw": "atorvastatin",
+              "status": "CURRENT"
+            },
+            "quote": "atorvastatin 40 mg PO nightly"
+          }
+        ],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": [
+          {
+            "value": {
+              "kind": "PROCEDURE_DATE",
+              "raw_text": "carpal tunnel release (scheduled for 03/01/2026)"
+            },
+            "quote": "Planned procedure: carpal tunnel release (scheduled for 03/01/2026)"
+          },
+          {
+            "value": {
+              "kind": "PROCEDURE_DATE",
+              "raw_text": "Carpal tunnel release scheduled for 03/01/2026 with Hand Surgery."
+            },
+            "quote": "Carpal tunnel release scheduled for 03/01/2026 with Hand Surgery."
+          }
+        ]
+      },
+      "517b3a8f-e994-558a-95fb-b093a650077d": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "HISTORY_AND_PHYSICAL",
+            "quote": "HISTORY AND PHYSICAL"
+          }
+        },
+        "patient_identifiers": [],
+        "hnp_details": {
+          "completion": {
+            "value": "COMPLETE",
+            "quote": "HISTORY AND PHYSICAL\nDate of service: 07/20/2025\nEncounter: annual wellness / establish care\nHPI: 85-year-old female presenting to establish primary care. No acute complaints. Reports numbness and tingling of the left hand of several months' duration, referred to Hand Surgery for evaluation.\nPMH: Atrial fibrillation.\nEXAM: Well-appearing, no acute distress. Heart regular. Lungs clear. Abdomen benign.\nPLAN: Routine health maintenance. Follow up with specialist as scheduled."
+          },
+          "date_of_service": {
+            "value": "07/20/2025",
+            "quote": "Date of service: 07/20/2025"
+          }
+        },
+        "consent_details": null,
+        "vitals_mentions": [],
+        "medication_mentions": [],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": []
+      }
+    }
+  },
+  "case_00027": {
+    "label": {
+      "decision": "NEEDS_FOLLOW_UP",
+      "categories": [
+        "ANTICOAGULATION_MANAGEMENT"
+      ],
+      "rationale": "His med list only shows ASA 81, but at the 03/25 nursing intake he said he's also taking Eliquis 5 mg BID from an outside cardiologist. The nurse flagged it for review, but nobody followed up. There's no perioperative plan anywhere for stopping or restarting the apixaban. H&P (03/05, 23 days), signed consent 03/23 and CBC 03/09 are otherwise in order."
+    },
+    "reported_quote": "Patient also reports taking Eliquis 5 mg (BID), prescribed by an outside cardiologist; not on the reconciled medication list - flagged for provider review.",
+    "extracted_status": "UNCLEAR",
+    "submission": {
+      "patient": {
+        "id": "7d716b19-aa1d-5e6f-8ea3-aa15d87440bb",
+        "mrn": "MRN-3000027",
+        "name": {
+          "given": "Liam",
+          "family": "Haddad"
+        },
+        "dob": "1964-01-02",
+        "sex": "M"
+      },
+      "procedure": {
+        "case_id": "case_00027",
+        "procedure_type": "Elective lumbar laminectomy",
+        "procedure_risk": "MODERATE",
+        "procedure_date": "2026-03-28",
+        "is_elective": true,
+        "location": "Cadence Surgical Center - Main OR"
+      },
+      "vitals": [
+        {
+          "type": "temperature",
+          "value_f": 98.6,
+          "date": "2026-03-23T10:15:00Z",
+          "source": "Nursing triage"
+        },
+        {
+          "type": "blood_pressure",
+          "systolic": 132,
+          "diastolic": 72,
+          "date": "2026-03-23T10:12:00Z",
+          "source": "Primary care visit"
+        },
+        {
+          "type": "blood_pressure",
+          "systolic": 122,
+          "diastolic": 70,
+          "date": "2026-03-16T09:05:00Z",
+          "source": "Cardiology clinic"
+        }
+      ],
+      "labs": [
+        {
+          "id": "570248c1-38d7-5d84-b6ab-b566a3997360",
+          "code": "PT-INR",
+          "display": "Prothrombin Time with INR",
+          "effective_at": "2026-03-26T07:13:00Z",
+          "status": "final",
+          "source": "Quest Diagnostics"
+        },
+        {
+          "id": "770a00fc-1190-53a1-a99c-9a23c076011a",
+          "code": "CBC",
+          "display": "Complete Blood Count",
+          "effective_at": "2026-03-09T07:35:00Z",
+          "status": "final",
+          "source": "Internal Hospital Lab"
+        },
+        {
+          "id": "c988f855-af9a-5779-bb21-fcc4cd14c34f",
+          "code": "CBC",
+          "display": "Complete Blood Count",
+          "effective_at": "2026-02-19T11:54:00Z",
+          "status": "final",
+          "source": "Quest Diagnostics"
+        }
+      ],
+      "medications": [
+        {
+          "name": "gabapentin 300 mg PO TID",
+          "active": true
+        },
+        {
+          "name": "acetaminophen 650 mg PO q6h PRN pain",
+          "active": true
+        },
+        {
+          "name": "ASA 81 mg PO daily",
+          "active": true
+        }
+      ],
+      "conditions": [
+        {
+          "name": "Atrial fibrillation",
+          "active": true
+        }
+      ],
+      "documents": [
+        {
+          "doc_id": "fb11dfa0-e63a-5d09-8d1b-ae087a16790b",
+          "type": "Anesthesia Screening Note",
+          "date": "2026-03-20",
+          "author": "Robert Martinez, NP-C",
+          "text": "PRE-ANESTHESIA EVALUATION\nDate: 03/20/2026\nProposed procedure: lumbar laminectomy\n\nASA physical status: II.\nAirway: Mallampati III, thyromental distance >3 FB, full dentition.\nSTOP-BANG: 5. No known OSA.\nPrior anesthesia: no prior anesthetics.\n\nSYSTEMS REVIEW:\n  Cardiac: no angina, CHF, or known valvular disease.\n  Pulmonary: mild intermittent asthma, albuterol PRN.\n  GI: GERD controlled on PPI.\n  Renal/Endocrine: no renal or thyroid disease.\n  Neuro: no neurologic deficits.\n\nH&P reviewed.\nNPO: reviewed standard fasting guidelines; no additional instructions.\nPlan: general anesthesia with LMA. Discussed anesthesia risks with patient including sore throat, dental injury, nausea, awareness, and rare serious cardiopulmonary events. Questions answered.\nPost-op disposition: inpatient admission to surgical floor."
+        },
+        {
+          "doc_id": "3dcc4322-04a1-5e71-bcd0-ca6ac504bf89",
+          "type": "Pre-op Nursing Intake",
+          "date": "2026-03-25",
+          "author": "Courtney P. Nguyen, BSN, RN",
+          "text": "PRE-OP NURSING ASSESSMENT\nVisit date: 03/25/2026\nPlanned procedure: lumbar laminectomy\n\nVITAL SIGNS: See flowsheet.\n\nMEDICATION RECONCILIATION (patient-reported):\n  - gabapentin 300 mg PO TID - taking as prescribed\n  - acetaminophen 650 mg PO q6h PRN pain - taking as prescribed\n  - ASA 81 mg PO daily - taking as prescribed\n  - Patient also reports taking Eliquis 5 mg (BID), prescribed by an outside cardiologist; not on the reconciled medication list - flagged for provider review.\n\nALLERGIES reviewed and confirmed. Reports seasonal allergies; denies fever or productive cough.\n\nPAIN: 1/10 at right knee, managed with acetaminophen.\nSKIN: intact; no rashes, open wounds, or pressure injuries at the planned surgical site.\nFUNCTIONAL STATUS: independent; uses cane for longer distances.\nPRIOR ANESTHESIA: uncomplicated general anesthesia in the past.\nADVANCE DIRECTIVE: on file. Health care proxy: son.\nPSYCHOSOCIAL: lives with family who will assist during recovery.\n\nNPO instructions: nothing to eat after midnight; clear liquids until 2 hours before arrival. Patient verbalized understanding.\nFall risk: moderate. Ride home arranged with spouse.\nEducation provided on incentive spirometry, pain management expectations, and chlorhexidine skin prep."
+        },
+        {
+          "doc_id": "754bee79-29a6-560b-abd6-bfc31c0a45df",
+          "type": "Social Work Note",
+          "date": "2026-03-03",
+          "author": "Lauren Q. Patel, AGNP-C",
+          "text": "Assessed discharge needs. Patient lives in a two-story home; bedroom on the first floor available. Family will assist for the first week. No barriers to discharge identified. Insurance verified; durable medical equipment benefits confirmed. Patient given contact information for home health agencies in case needs change after surgery."
+        },
+        {
+          "doc_id": "367d2eb5-6e4d-5192-a1fa-ef30e6670f17",
+          "type": "Preoperative History & Physical (H&P)",
+          "date": "2026-03-05",
+          "author": "Andrew Desai, MSN, NP-C",
+          "text": "PREOPERATIVE HISTORY AND PHYSICAL\nDate of service: 03/05/2026\nPatient: Liam Haddad    DOB: 01/02/1964\nPlanned procedure: lumbar laminectomy (scheduled for 03/28/2026)\n\nCHIEF COMPLAINT: Low back pain radiating to both legs.\n\nHISTORY OF PRESENT ILLNESS: 62-year-old male referred by Neurosurgery for pre-operative evaluation prior to lumbar laminectomy. MRI with severe L4-L5 central canal stenosis; neurogenic claudication after 5 minutes of walking despite epidural injections. Patient denies recent illness, hospitalizations, or changes in medications over the past month. Functional capacity estimated at >4 METs (climbs two flights of stairs without stopping).\n\nPAST MEDICAL HISTORY: Atrial fibrillation.\nPAST SURGICAL HISTORY: C-section x2.\n\nMEDICATIONS:\n  - gabapentin 300 mg PO TID\n  - acetaminophen 650 mg PO q6h PRN pain\n  - ASA 81 mg PO daily\nALLERGIES: Codeine (nausea)\n\nSOCIAL HISTORY: Never smoker; drinks 1-2 glasses of wine weekly. Lives with spouse.\nFAMILY HISTORY: Mother with breast cancer.\n\nREVIEW OF SYSTEMS: Negative for cough, dyspnea on exertion, palpitations, fevers, orthopnea, easy bruising, night sweats. All other systems reviewed and negative.\n\nPHYSICAL EXAM:\n  Vitals 10:05  Blood pressure 131/72 mmHg, HR 78, T 98.4 F, SpO2 95% RA\n  General: Alert, oriented, no acute distress.\n  Airway: Mallampati II, full neck range of motion.\n  CV: Regular rate and rhythm, no murmurs.\n  Lungs: Clear to auscultation bilaterally.\n  Abdomen: Soft, non-tender, non-distended.\n  Extremities: No edema.\n\nASSESSMENT AND PLAN:\n  62-year-old male being evaluated prior to lumbar laminectomy. Cardiac risk acceptable for planned surgery.\n  1. Lumbar laminectomy scheduled for 03/28/2026 with Neurosurgery.\n  2. Pre-operative labs per protocol; results to be reviewed prior to surgery.\n  3. Continue home medications except as directed by perioperative instructions.\n  4. Risks and benefits of surgery discussed at a high level; formal consent per surgical team.\n\nElectronically signed by Andrew Desai on 03/05/2026."
+        },
+        {
+          "doc_id": "eb9fad3d-8211-5e4e-8b8d-b28882f88709",
+          "type": "Admission H&P",
+          "date": "2025-07-19",
+          "author": "Christopher Adams, MSN, NP-C",
+          "text": "HISTORY AND PHYSICAL\nDate of service: 07/19/2025\nEncounter: annual wellness / establish care\nHPI: 62-year-old male presenting to establish primary care. No acute complaints. Reports low back pain radiating to both legs of several months' duration, referred to Neurosurgery for evaluation.\nPMH: Atrial fibrillation.\nEXAM: Well-appearing, no acute distress. Heart regular. Lungs clear. Abdomen benign.\nPLAN: Routine health maintenance. Follow up with specialist as scheduled."
+        },
+        {
+          "doc_id": "aefdb235-5e14-5374-b846-1d7fa3a831f8",
+          "type": "Patient Portal Message",
+          "date": "2026-02-27",
+          "author": "Sarah Rivera, MD",
+          "text": "Patient asks whether they can take ibuprofen for knee pain before surgery and whether a family member may stay overnight. Reply sent with standard pre-op medication guidance."
+        },
+        {
+          "doc_id": "a0fd6579-12e0-5e10-8142-e4b7ff75da74",
+          "type": "Consent for Surgery",
+          "date": "2026-03-23",
+          "author": "Courtney Adams, MD",
+          "text": "INFORMED CONSENT FOR SURGICAL PROCEDURE\nCadence Surgical Center - Neurosurgery\n\nProcedure: lumbar laminectomy\nSurgeon: Courtney Adams, MD\n\nI, Liam Haddad, authorize the surgeon named above and assistants to perform the procedure listed. The nature and purpose of the procedure, the anticipated benefits, and the reasonable alternatives have been explained to me. I understand the risks include, but are not limited to: scarring, anesthesia complications, failure to relieve symptoms, bleeding, nerve injury. I understand that no guarantee has been made regarding the outcome.\n\nAnesthesia: I consent to the administration of anesthesia as deemed appropriate by the anesthesia team.\nBlood products: I consent to transfusion of blood products if medically necessary.\nTissue disposal: I consent to the disposal of any tissue removed in accordance with hospital policy.\n\nPatient signature on file - signed in clinic 03/23/2026 11:58 (scanned copy attached).\n\nPhysician attestation: I have explained the nature of the procedure, its risks, benefits, and alternatives, and answered all questions. Electronically signed by Courtney Adams, MD on 03/23/2026."
+        }
+      ],
+      "metadata": {
+        "submission_received_at": "2026-03-28T14:22:10Z",
+        "source_system": "Cadence Intake API v2"
+      }
+    },
+    "responses": {
+      "fb11dfa0-e63a-5d09-8d1b-ae087a16790b": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "ANESTHESIA_ASSESSMENT",
+            "quote": "PRE-ANESTHESIA EVALUATION"
+          }
+        },
+        "patient_identifiers": [],
+        "hnp_details": null,
+        "consent_details": null,
+        "vitals_mentions": [],
+        "medication_mentions": [
+          {
+            "value": {
+              "drug_name_raw": "albuterol",
+              "status": "CURRENT"
+            },
+            "quote": "Pulmonary: mild intermittent asthma, albuterol PRN."
+          },
+          {
+            "value": {
+              "drug_name_raw": "PPI",
+              "status": "CURRENT"
+            },
+            "quote": "GI: GERD controlled on PPI."
+          }
+        ],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": [
+          {
+            "value": {
+              "kind": "RISK_LEVEL",
+              "raw_text": "ASA physical status: II."
+            },
+            "quote": "ASA physical status: II."
+          }
+        ]
+      },
+      "3dcc4322-04a1-5e71-bcd0-ca6ac504bf89": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "NURSING_ASSESSMENT",
+            "quote": "PRE-OP NURSING ASSESSMENT"
+          }
+        },
+        "patient_identifiers": [],
+        "hnp_details": null,
+        "consent_details": null,
+        "vitals_mentions": [],
+        "medication_mentions": [
+          {
+            "value": {
+              "drug_name_raw": "gabapentin",
+              "status": "CURRENT"
+            },
+            "quote": "gabapentin 300 mg PO TID - taking as prescribed"
+          },
+          {
+            "value": {
+              "drug_name_raw": "acetaminophen",
+              "status": "CURRENT"
+            },
+            "quote": "acetaminophen 650 mg PO q6h PRN pain - taking as prescribed"
+          },
+          {
+            "value": {
+              "drug_name_raw": "ASA",
+              "status": "CURRENT"
+            },
+            "quote": "ASA 81 mg PO daily - taking as prescribed"
+          },
+          {
+            "value": {
+              "drug_name_raw": "Eliquis",
+              "status": "UNCLEAR"
+            },
+            "quote": "Patient also reports taking Eliquis 5 mg (BID), prescribed by an outside cardiologist; not on the reconciled medication list - flagged for provider review."
+          }
+        ],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": [
+          {
+            "value": {
+              "kind": "PROCEDURE_DATE",
+              "raw_text": "Visit date: 03/25/2026"
+            },
+            "quote": "Visit date: 03/25/2026"
+          }
+        ]
+      },
+      "754bee79-29a6-560b-abd6-bfc31c0a45df": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "OTHER",
+            "quote": "Assessed discharge needs."
+          }
+        },
+        "patient_identifiers": [],
+        "hnp_details": null,
+        "consent_details": null,
+        "vitals_mentions": [],
+        "medication_mentions": [],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": []
+      },
+      "367d2eb5-6e4d-5192-a1fa-ef30e6670f17": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "HISTORY_AND_PHYSICAL",
+            "quote": "PREOPERATIVE HISTORY AND PHYSICAL"
+          }
+        },
+        "patient_identifiers": [
+          {
+            "value": {
+              "kind": "NAME",
+              "raw_value": "Liam Haddad"
+            },
+            "quote": "Patient: Liam Haddad"
+          },
+          {
+            "value": {
+              "kind": "DOB",
+              "raw_value": "01/02/1964"
+            },
+            "quote": "DOB: 01/02/1964"
+          }
+        ],
+        "hnp_details": {
+          "completion": {
+            "value": "COMPLETE",
+            "quote": "Electronically signed by Andrew Desai on 03/05/2026."
+          },
+          "date_of_service": {
+            "value": "03/05/2026",
+            "quote": "Date of service: 03/05/2026"
+          }
+        },
+        "consent_details": null,
+        "vitals_mentions": [
+          {
+            "value": {
+              "vital_type": "BLOOD_PRESSURE",
+              "raw_value": "131/72",
+              "raw_unit": "mmHg",
+              "time_raw": "10:05"
+            },
+            "quote": "Vitals 10:05  Blood pressure 131/72 mmHg, HR 78, T 98.4 F, SpO2 95% RA"
+          },
+          {
+            "value": {
+              "vital_type": "TEMPERATURE",
+              "raw_value": "98.4",
+              "raw_unit": "F",
+              "time_raw": "10:05"
+            },
+            "quote": "Vitals 10:05  Blood pressure 131/72 mmHg, HR 78, T 98.4 F, SpO2 95% RA"
+          }
+        ],
+        "medication_mentions": [
+          {
+            "value": {
+              "drug_name_raw": "gabapentin",
+              "status": "CURRENT"
+            },
+            "quote": "gabapentin 300 mg PO TID"
+          },
+          {
+            "value": {
+              "drug_name_raw": "acetaminophen",
+              "status": "CURRENT"
+            },
+            "quote": "acetaminophen 650 mg PO q6h PRN pain"
+          },
+          {
+            "value": {
+              "drug_name_raw": "ASA",
+              "status": "CURRENT"
+            },
+            "quote": "ASA 81 mg PO daily"
+          }
+        ],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": [
+          {
+            "value": {
+              "kind": "PROCEDURE_DATE",
+              "raw_text": "lumbar laminectomy (scheduled for 03/28/2026)"
+            },
+            "quote": "Planned procedure: lumbar laminectomy (scheduled for 03/28/2026)"
+          },
+          {
+            "value": {
+              "kind": "PROCEDURE_DATE",
+              "raw_text": "Lumbar laminectomy scheduled for 03/28/2026 with Neurosurgery."
+            },
+            "quote": "Lumbar laminectomy scheduled for 03/28/2026 with Neurosurgery."
+          }
+        ]
+      },
+      "eb9fad3d-8211-5e4e-8b8d-b28882f88709": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "HISTORY_AND_PHYSICAL",
+            "quote": "HISTORY AND PHYSICAL"
+          }
+        },
+        "patient_identifiers": [],
+        "hnp_details": {
+          "completion": {
+            "value": "COMPLETE",
+            "quote": "HISTORY AND PHYSICAL\nDate of service: 07/19/2025\nEncounter: annual wellness / establish care\nHPI: 62-year-old male presenting to establish primary care. No acute complaints. Reports low back pain radiating to both legs of several months' duration, referred to Neurosurgery for evaluation.\nPMH: Atrial fibrillation.\nEXAM: Well-appearing, no acute distress. Heart regular. Lungs clear. Abdomen benign.\nPLAN: Routine health maintenance. Follow up with specialist as scheduled."
+          },
+          "date_of_service": {
+            "value": "07/19/2025",
+            "quote": "Date of service: 07/19/2025"
+          }
+        },
+        "consent_details": null,
+        "vitals_mentions": [],
+        "medication_mentions": [],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": []
+      },
+      "aefdb235-5e14-5374-b846-1d7fa3a831f8": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "OTHER",
+            "quote": "Patient asks whether they can take ibuprofen for knee pain before surgery and whether a family member may stay overnight."
+          }
+        },
+        "patient_identifiers": [],
+        "hnp_details": null,
+        "consent_details": null,
+        "vitals_mentions": [],
+        "medication_mentions": [],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": []
+      },
+      "a0fd6579-12e0-5e10-8142-e4b7ff75da74": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "SURGICAL_CONSENT",
+            "quote": "INFORMED CONSENT FOR SURGICAL PROCEDURE"
+          }
+        },
+        "patient_identifiers": [],
+        "hnp_details": null,
+        "consent_details": {
+          "signature_states": [
+            {
+              "value": "SIGNED",
+              "quote": "Patient signature on file - signed in clinic 03/23/2026 11:58 (scanned copy attached)."
+            }
+          ],
+          "procedure": {
+            "value": "lumbar laminectomy",
+            "quote": "Procedure: lumbar laminectomy"
+          }
+        },
+        "vitals_mentions": [],
+        "medication_mentions": [],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": []
+      }
+    }
+  },
+  "case_00038": {
+    "label": {
+      "decision": "NEEDS_FOLLOW_UP",
+      "categories": [
+        "ANTICOAGULATION_MANAGEMENT"
+      ],
+      "rationale": "Coumadin isn't on the reconciled med list, but at the 04/06 pre-admission visit the patient said he takes Coumadin 5 mg daily from an outside cardiologist, so he's on warfarin. Nothing in the chart says when to hold it or when to restart it after the cataract surgery. The rest is fine: H&P 03/27, CBC 04/01, signed consent 03/26, BP 143/76."
+    },
+    "reported_quote": "Patient also reports taking Coumadin 5 mg (daily (INR goal 2-3)), prescribed by an outside cardiologist; not on the reconciled medication list - flagged for provider review.",
+    "extracted_status": "CURRENT",
+    "submission": {
+      "patient": {
+        "id": "973522c3-4c13-5503-a309-5d7336cb80da",
+        "mrn": "MRN-3000038",
+        "name": {
+          "given": "Noah",
+          "family": "Simmons"
+        },
+        "dob": "1958-01-01",
+        "sex": "M"
+      },
+      "procedure": {
+        "case_id": "case_00038",
+        "procedure_type": "Elective cataract extraction",
+        "procedure_risk": "LOW",
+        "procedure_date": "2026-04-08",
+        "is_elective": true,
+        "location": "Cadence Surgical Center - Main OR"
+      },
+      "vitals": [
+        {
+          "type": "blood_pressure",
+          "systolic": 134,
+          "diastolic": 76,
+          "date": "2026-04-03T10:12:00Z",
+          "source": "Primary care visit"
+        },
+        {
+          "type": "temperature",
+          "value_f": 99.0,
+          "date": "2026-04-03T10:15:00Z",
+          "source": "Pre-op clinic"
+        },
+        {
+          "type": "blood_pressure",
+          "systolic": 139,
+          "diastolic": 82,
+          "date": "2026-03-27T09:05:00Z",
+          "source": "Pre-op clinic"
+        }
+      ],
+      "labs": [
+        {
+          "id": "c608baf3-1b0d-5eef-919f-30967a06ffce",
+          "code": "LAB-CBC",
+          "display": "Complete Blood Count w/ Differential",
+          "effective_at": "2026-04-01T09:29:00Z",
+          "status": "final",
+          "source": "Regional Reference Lab"
+        },
+        {
+          "id": "56b134b1-25eb-5f37-8345-49e5fb289b8c",
+          "code": "HBA1C",
+          "display": "Hemoglobin A1c",
+          "effective_at": "2026-03-12T08:49:00Z",
+          "status": "final",
+          "source": "Internal Hospital Lab"
+        },
+        {
+          "id": "3aa1c571-11ea-5b09-b1f8-695058541816",
+          "code": "T&S",
+          "display": "Type and Screen",
+          "effective_at": "2026-03-02T11:36:00Z",
+          "status": "final",
+          "source": "Quest Diagnostics"
+        }
+      ],
+      "medications": [
+        {
+          "name": "lisinopril 20 mg PO daily",
+          "active": true
+        },
+        {
+          "name": "metformin 1000 mg PO BID",
+          "active": true
+        },
+        {
+          "name": "vitamin D3 2000 IU PO daily",
+          "active": true
+        }
+      ],
+      "conditions": [
+        {
+          "name": "Hypertension",
+          "active": true
+        },
+        {
+          "name": "Type 2 diabetes mellitus",
+          "active": true
+        },
+        {
+          "name": "Atrial fibrillation",
+          "active": true
+        }
+      ],
+      "documents": [
+        {
+          "doc_id": "6fa954e5-6cea-505e-92e1-07d7188d734d",
+          "type": "Pre-Admission Testing Visit",
+          "date": "2026-04-06",
+          "author": "Christopher Chen, RN, CPAN",
+          "text": "PRE-ADMISSION TESTING VISIT\nVisit date: 04/06/2026\nPlanned procedure: cataract extraction\n\nVITAL SIGNS:\n  08:41  143/76 mmHg\n  08:45  Re-measured Temperature 99.0 °F (oral) 4 min later; .\n\nMEDICATION RECONCILIATION (patient-reported):\n  - lisinopril 20 mg PO daily - taking as prescribed\n  - metformin 1000 mg PO BID - taking as prescribed\n  - vitamin D3 2000 IU PO daily - taking as prescribed\n  - Patient also reports taking Coumadin 5 mg (daily (INR goal 2-3)), prescribed by an outside cardiologist; not on the reconciled medication list - flagged for provider review.\n\nALLERGIES reviewed and confirmed. Reports seasonal allergies; denies fever or productive cough.\n\nPAIN: 4/10 at lower back, managed with ice and rest.\nSKIN: intact; no rashes, open wounds, or pressure injuries at the planned surgical site.\nFUNCTIONAL STATUS: independent with ADLs.\nPRIOR ANESTHESIA: uncomplicated general anesthesia in the past.\nADVANCE DIRECTIVE: on file. Health care proxy: daughter.\nPSYCHOSOCIAL: reports mild anxiety about surgery; coping strategies discussed.\n\nNPO instructions: nothing to eat after midnight; clear liquids until 2 hours before arrival. Patient verbalized understanding.\nFall risk: moderate. Ride home arranged with daughter.\nEducation provided on incentive spirometry, pain management expectations, and chlorhexidine skin prep."
+        },
+        {
+          "doc_id": "e7d2bbfd-b672-5e84-b8b2-2da55f37dc17",
+          "type": "H&P",
+          "date": "2025-08-29",
+          "author": "Michael O'Connor, DNP, FNP-BC",
+          "text": "HISTORY AND PHYSICAL\nDate of service: 08/29/2025\nEncounter: annual wellness / establish care\nHPI: 68-year-old male presenting to establish primary care. No acute complaints. Reports progressive blurred vision, right eye of several months' duration, referred to Ophthalmology for evaluation.\nPMH: Hypertension, Type 2 diabetes mellitus, Atrial fibrillation.\nEXAM: Well-appearing, no acute distress. Heart regular. Lungs clear. Abdomen benign.\nPLAN: Routine health maintenance. Follow up with specialist as scheduled."
+        },
+        {
+          "doc_id": "e3a8a2ad-7b3f-547c-97d3-fc6bf01ca091",
+          "type": "Clinic H&P",
+          "date": "2026-03-27",
+          "author": "Tiffany G. Brown, DNP, FNP-BC",
+          "text": "PREOPERATIVE HISTORY AND PHYSICAL\nDate of service: 03/27/2026\nPatient: Noah Simmons    DOB: 01/01/1958\nPlanned procedure: cataract extraction (scheduled for 04/08/2026)\n\nCHIEF COMPLAINT: Progressive blurred vision, right eye.\n\nHISTORY OF PRESENT ILLNESS: 68-year-old male referred by Ophthalmology for pre-operative evaluation prior to cataract extraction. Visually significant nuclear sclerotic cataract with best-corrected acuity 20/70 OD and glare limiting night driving. Patient denies recent illness, hospitalizations, or changes in medications over the past month. Functional capacity estimated at >4 METs (climbs two flights of stairs without stopping).\n\nPAST MEDICAL HISTORY: Hypertension; Type 2 diabetes mellitus; Atrial fibrillation.\nPAST SURGICAL HISTORY: C-section x2.\n\nMEDICATIONS:\n  - lisinopril 20 mg PO daily\n  - metformin 1000 mg PO BID\n  - vitamin D3 2000 IU PO daily\nALLERGIES: NKDA\n\nSOCIAL HISTORY: Never smoker; drinks 1-2 glasses of wine weekly. Works as an accountant.\nFAMILY HISTORY: Mother with breast cancer.\n\nREVIEW OF SYSTEMS: Negative for easy bruising, cough, dyspnea on exertion, orthopnea, chills, melena, dysuria. All other systems reviewed and negative.\n\nPHYSICAL EXAM:\n  Vitals 10:05  BP 134/76, HR 70, T 97.5 F, SpO2 96% RA\n  General: Alert, oriented, no acute distress.\n  Airway: Mallampati I, full neck range of motion.\n  CV: Irregularly irregular rhythm, rate controlled, no murmurs.\n  Lungs: Clear to auscultation bilaterally.\n  Abdomen: Soft, non-tender, non-distended.\n  Extremities: No edema.\n\nASSESSMENT AND PLAN:\n  68-year-old male being evaluated prior to cataract extraction. Cardiac risk acceptable for planned surgery.\n  1. Cataract extraction scheduled for 04/08/2026 with Ophthalmology.\n  2. Pre-operative labs per protocol; results to be reviewed prior to surgery.\n  3. Continue home medications except as directed by perioperative instructions.\n  4. Risks and benefits of surgery discussed at a high level; formal consent per surgical team.\n  5. Diabetes: hold metformin the morning of surgery; POC glucose on arrival.\n\nElectronically signed by Tiffany G. Brown on 03/27/2026."
+        },
+        {
+          "doc_id": "5ed1334d-3e34-5cac-91f5-0bb39e10ec54",
+          "type": "Nutrition Consult",
+          "date": "2026-03-13",
+          "author": "Jessica T. Chen, DO",
+          "text": "BMI 27.32. Discussed protein intake goals of 1.2 g/kg/day pre-operatively and carbohydrate loading drink the evening before surgery per ERAS protocol. Diet recall shows irregular meals and low vegetable intake. Provided written materials on high-protein snacks; recommended oral nutrition supplement twice daily for 7 days pre-op."
+        },
+        {
+          "doc_id": "868595c7-2e6b-5eda-9603-f38ba151a087",
+          "type": "Procedure Consent Form",
+          "date": "2026-03-26",
+          "author": "Andrew K. Williams, DO",
+          "text": "INFORMED CONSENT FOR SURGICAL PROCEDURE\nCadence Surgical Center - Ophthalmology\n\nProcedure: cataract extraction\nSurgeon: Andrew K. Williams, DO\n\nI, Noah Simmons, authorize the surgeon named above and assistants to perform the procedure listed. The nature and purpose of the procedure, the anticipated benefits, and the reasonable alternatives have been explained to me. I understand the risks include, but are not limited to: nerve injury, failure to relieve symptoms, anesthesia complications, blood clots, injury to surrounding structures. I understand that no guarantee has been made regarding the outcome.\n\nAnesthesia: I consent to the administration of anesthesia as deemed appropriate by the anesthesia team.\nBlood products: I consent to transfusion of blood products if medically necessary.\nTissue disposal: I consent to the disposal of any tissue removed in accordance with hospital policy.\n\nPatient signature on file - signed in clinic 03/26/2026 08:32 (scanned copy attached).\n\nPhysician attestation: I have explained the nature of the procedure, its risks, benefits, and alternatives, and answered all questions. Electronically signed by Andrew K. Williams, DO on 03/26/2026."
+        }
+      ],
+      "metadata": {
+        "submission_received_at": "2026-04-08T14:22:10Z",
+        "source_system": "Cadence Intake API v2"
+      }
+    },
+    "responses": {
+      "6fa954e5-6cea-505e-92e1-07d7188d734d": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "OTHER",
+            "quote": "PRE-ADMISSION TESTING VISIT"
+          }
+        },
+        "patient_identifiers": [],
+        "hnp_details": null,
+        "consent_details": null,
+        "vitals_mentions": [
+          {
+            "value": {
+              "vital_type": "BLOOD_PRESSURE",
+              "raw_value": "143/76",
+              "raw_unit": "mmHg",
+              "time_raw": "08:41"
+            },
+            "quote": "08:41  143/76 mmHg"
+          },
+          {
+            "value": {
+              "vital_type": "TEMPERATURE",
+              "raw_value": "99.0",
+              "raw_unit": "°F",
+              "time_raw": "08:45"
+            },
+            "quote": "08:45  Re-measured Temperature 99.0 °F (oral) 4 min later; ."
+          }
+        ],
+        "medication_mentions": [
+          {
+            "value": {
+              "drug_name_raw": "lisinopril",
+              "status": "CURRENT"
+            },
+            "quote": "lisinopril 20 mg PO daily - taking as prescribed"
+          },
+          {
+            "value": {
+              "drug_name_raw": "metformin",
+              "status": "CURRENT"
+            },
+            "quote": "metformin 1000 mg PO BID - taking as prescribed"
+          },
+          {
+            "value": {
+              "drug_name_raw": "vitamin D3",
+              "status": "CURRENT"
+            },
+            "quote": "vitamin D3 2000 IU PO daily - taking as prescribed"
+          },
+          {
+            "value": {
+              "drug_name_raw": "Coumadin",
+              "status": "CURRENT"
+            },
+            "quote": "Patient also reports taking Coumadin 5 mg (daily (INR goal 2-3)), prescribed by an outside cardiologist; not on the reconciled medication list - flagged for provider review."
+          }
+        ],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": [
+          {
+            "value": {
+              "kind": "PROCEDURE_DATE",
+              "raw_text": "Planned procedure: cataract extraction"
+            },
+            "quote": "Planned procedure: cataract extraction"
+          }
+        ]
+      },
+      "e7d2bbfd-b672-5e84-b8b2-2da55f37dc17": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "HISTORY_AND_PHYSICAL",
+            "quote": "HISTORY AND PHYSICAL"
+          }
+        },
+        "patient_identifiers": [],
+        "hnp_details": {
+          "completion": {
+            "value": "COMPLETE",
+            "quote": "HISTORY AND PHYSICAL\nDate of service: 08/29/2025\nEncounter: annual wellness / establish care\nHPI: 68-year-old male presenting to establish primary care. No acute complaints. Reports progressive blurred vision, right eye of several months' duration, referred to Ophthalmology for evaluation.\nPMH: Hypertension, Type 2 diabetes mellitus, Atrial fibrillation.\nEXAM: Well-appearing, no acute distress. Heart regular. Lungs clear. Abdomen benign.\nPLAN: Routine health maintenance. Follow up with specialist as scheduled."
+          },
+          "date_of_service": {
+            "value": "08/29/2025",
+            "quote": "Date of service: 08/29/2025"
+          }
+        },
+        "consent_details": null,
+        "vitals_mentions": [],
+        "medication_mentions": [],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": []
+      },
+      "e3a8a2ad-7b3f-547c-97d3-fc6bf01ca091": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "HISTORY_AND_PHYSICAL",
+            "quote": "PREOPERATIVE HISTORY AND PHYSICAL"
+          }
+        },
+        "patient_identifiers": [
+          {
+            "value": {
+              "kind": "NAME",
+              "raw_value": "Noah Simmons"
+            },
+            "quote": "Patient: Noah Simmons"
+          },
+          {
+            "value": {
+              "kind": "DOB",
+              "raw_value": "01/01/1958"
+            },
+            "quote": "DOB: 01/01/1958"
+          }
+        ],
+        "hnp_details": {
+          "completion": {
+            "value": "COMPLETE",
+            "quote": "Electronically signed by Tiffany G. Brown on 03/27/2026."
+          },
+          "date_of_service": {
+            "value": "03/27/2026",
+            "quote": "Date of service: 03/27/2026"
+          }
+        },
+        "consent_details": null,
+        "vitals_mentions": [
+          {
+            "value": {
+              "vital_type": "BLOOD_PRESSURE",
+              "raw_value": "134/76",
+              "raw_unit": "mmHg",
+              "time_raw": "10:05"
+            },
+            "quote": "Vitals 10:05  BP 134/76, HR 70, T 97.5 F, SpO2 96% RA"
+          },
+          {
+            "value": {
+              "vital_type": "TEMPERATURE",
+              "raw_value": "97.5",
+              "raw_unit": "F",
+              "time_raw": "10:05"
+            },
+            "quote": "Vitals 10:05  BP 134/76, HR 70, T 97.5 F, SpO2 96% RA"
+          }
+        ],
+        "medication_mentions": [
+          {
+            "value": {
+              "drug_name_raw": "lisinopril",
+              "status": "CURRENT"
+            },
+            "quote": "lisinopril 20 mg PO daily"
+          },
+          {
+            "value": {
+              "drug_name_raw": "metformin",
+              "status": "CURRENT"
+            },
+            "quote": "metformin 1000 mg PO BID"
+          },
+          {
+            "value": {
+              "drug_name_raw": "vitamin D3",
+              "status": "CURRENT"
+            },
+            "quote": "vitamin D3 2000 IU PO daily"
+          }
+        ],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": [
+          {
+            "value": {
+              "kind": "PROCEDURE_DATE",
+              "raw_text": "cataract extraction (scheduled for 04/08/2026)"
+            },
+            "quote": "Planned procedure: cataract extraction (scheduled for 04/08/2026)"
+          },
+          {
+            "value": {
+              "kind": "PROCEDURE_DATE",
+              "raw_text": "Cataract extraction scheduled for 04/08/2026 with Ophthalmology."
+            },
+            "quote": "Cataract extraction scheduled for 04/08/2026 with Ophthalmology."
+          }
+        ]
+      },
+      "5ed1334d-3e34-5cac-91f5-0bb39e10ec54": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "OTHER",
+            "quote": "BMI 27.32. Discussed protein intake goals of 1.2 g/kg/day pre-operatively and carbohydrate loading drink the evening before surgery per ERAS protocol."
+          }
+        },
+        "patient_identifiers": [],
+        "hnp_details": null,
+        "consent_details": null,
+        "vitals_mentions": [],
+        "medication_mentions": [],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": []
+      },
+      "868595c7-2e6b-5eda-9603-f38ba151a087": {
+        "doc_metadata": {
+          "document_type": {
+            "value": "SURGICAL_CONSENT",
+            "quote": "INFORMED CONSENT FOR SURGICAL PROCEDURE"
+          }
+        },
+        "patient_identifiers": [],
+        "hnp_details": null,
+        "consent_details": {
+          "signature_states": [
+            {
+              "value": "SIGNED",
+              "quote": "Patient signature on file - signed in clinic 03/26/2026 08:32 (scanned copy attached)."
+            }
+          ],
+          "procedure": {
+            "value": "cataract extraction",
+            "quote": "Procedure: cataract extraction"
+          }
+        },
+        "vitals_mentions": [],
+        "medication_mentions": [],
+        "anticoagulation_plans": [],
+        "lab_mentions": [],
+        "date_risk_mentions": []
+      }
+    }
+  }
+}

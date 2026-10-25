@@ -80,6 +80,10 @@ SECTIONS
 - medication_mentions: every medication mentioned, with its status in this document:
   CURRENT (taking / continue / active), STOPPED (discontinued / stopped / replaced),
   HELD (temporarily held or paused), UNCLEAR (unknown, unsure, or contradictory).
+  A patient's report that they take a drug is CURRENT, even if the drug is missing
+  from the medication list or flagged for review: a list discrepancy is not doubt
+  about use. Use UNCLEAR only when the text questions whether the patient takes it
+  (e.g. "unsure if still taking", "may have stopped").
   A drug that appears only as a planned future step (e.g. a bridging regimen inside a
   perioperative plan) is not a medication mention; record it in anticoagulation_plans.
 - anticoagulation_plans: every perioperative management plan for a blood thinner
