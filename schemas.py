@@ -86,7 +86,7 @@ class PostopAction(StrEnum):
     CONTINUE_HOLD: keep it held after surgery until a stated point ("remain off until POD 3").
     DISCONTINUE: do not restart it.
     DEFERRED: the decision is postponed or handed to someone else instead of being made
-    here ("will be addressed after surgery", "resume per cardiology", "to be determined").
+    here ("will be decided after surgery", "resume per cardiology", "to be determined").
     A restart that states its own timing or condition is RESUME even if it also names
     who oversees it ("Resume Xarelto 24-48 hours after surgery, per surgical team").
     NOT_ADDRESSED: the plan says nothing about post-op management.
