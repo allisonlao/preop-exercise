@@ -148,7 +148,7 @@ make test
 
 ## Configurable Variables
 
-- `MODEL` (default `gpt-4.1-mini`)
+- `MODEL` (default `gpt-4o`)
 - `INPUT` (default `data/patients_sample_50.jsonl`)
 - `OUTPUT` (default `data/baseline_outputs.jsonl`)
 - `REPORT` (default `data/eval_report.json`)
