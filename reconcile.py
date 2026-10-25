@@ -26,6 +26,7 @@ then evaluates every reading that could be the most recent (worst case).
 
 from __future__ import annotations
 
+import logging
 import re
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
@@ -52,6 +53,7 @@ from models import (
     TemperatureUnit,
     TimePrecision,
 )
+from instruction_check import check_instruction
 from preprocess import DocumentHeader, ExclusionReason, StructuredMedication, StructuredSubmission, classify_drug
 from schemas import (
     AnticoagulationPlanMention,
@@ -71,6 +73,9 @@ from schemas import (
 )
 
 T = TypeVar("T")
+Action = TypeVar("Action", PreopAction, PostopAction)
+
+logger = logging.getLogger(__name__)
 
 
 class Unknown(Enum):
@@ -123,24 +128,49 @@ class TrustedPlan:
     index: int  # position in the extracted list; keeps plan ids stable
     drug_name_raw: str
     quote: str
-    preop_action: PreopAction  # UNCLEAR when its quote did not verify
+    # Effective actions: UNCLEAR when the quote did not verify, then possibly
+    # downgraded by instruction_check. *_extracted keeps the model's label for evidence.
+    preop_action: PreopAction
+    preop_extracted: PreopAction
     preop_quote: str | None
     preop_timing_raw: str | None
-    postop_action: PostopAction  # UNCLEAR when its quote did not verify
+    postop_action: PostopAction
+    postop_extracted: PostopAction
     postop_quote: str | None
     postop_timing_raw: str | None  # evidence text only; never gates a decision
 
 
+def effective_action(fact: QuotedFact[Action], unclear: Action, side: str, drug: str) -> tuple[Action, Action]:
+    """``(extracted, effective)`` for one side of a plan.
+
+    An unverified quote makes the action UNCLEAR; a verified one is then run
+    through the deterministic quote check, which can only downgrade it.
+    """
+
+    if not fact.verified:
+        return fact.value, unclear
+    effective = check_instruction(fact.value, fact.quote)
+    if effective is not fact.value:
+        logger.warning("%s action for %s downgraded from %s to %s by quote check: %r",
+                       side, drug, fact.value, effective, fact.quote)
+    return fact.value, effective
+
+
 def trusted_plan(index: int, fact: QuotedFact[AnticoagulationPlanMention]) -> TrustedPlan:
     mention = fact.value
+    drug = mention.drug_name_raw
+    preop_extracted, preop = effective_action(mention.preop_action, PreopAction.UNCLEAR, "pre-op", drug)
+    postop_extracted, postop = effective_action(mention.postop_action, PostopAction.UNCLEAR, "post-op", drug)
     return TrustedPlan(
         index=index,
-        drug_name_raw=mention.drug_name_raw,
+        drug_name_raw=drug,
         quote=fact.quote,
-        preop_action=trusted_value(mention.preop_action) or PreopAction.UNCLEAR,
+        preop_action=preop,
+        preop_extracted=preop_extracted,
         preop_quote=mention.preop_action.quote if mention.preop_action.verified else None,
         preop_timing_raw=mention.preop_timing_raw,
-        postop_action=trusted_value(mention.postop_action) or PostopAction.UNCLEAR,
+        postop_action=postop,
+        postop_extracted=postop_extracted,
         postop_quote=mention.postop_action.quote if mention.postop_action.verified else None,
         postop_timing_raw=mention.postop_timing_raw,
     )
@@ -768,15 +798,20 @@ def _plan_from(doc: TrustedDocument, trusted: TrustedPlan) -> AnticoagulationPla
 
 
 def plan_detail(trusted: TrustedPlan) -> str:
-    """Evidence detail such as ``plan for warfarin: pre-op HOLD (5 days before surgery); post-op DEFERRED``."""
+    """Evidence detail such as ``plan for warfarin: pre-op HOLD (5 days before surgery); post-op DEFERRED``.
 
-    def side(name: str, action: str, timing: str | None) -> str:
-        return f"{name} {action}" + (f" ({timing})" if timing else "")
+    A side downgraded by an unverified quote or the quote check also shows the
+    extracted label, e.g. ``post-op UNCLEAR [extracted as RESUME]``.
+    """
+
+    def side(name: str, action: str, extracted: str, timing: str | None) -> str:
+        text = f"{name} {action}" + (f" ({timing})" if timing else "")
+        return text if action == extracted else f"{text} [extracted as {extracted}]"
 
     return (
         f"plan for {trusted.drug_name_raw}: "
-        f"{side('pre-op', trusted.preop_action, trusted.preop_timing_raw)}; "
-        f"{side('post-op', trusted.postop_action, trusted.postop_timing_raw)}"
+        f"{side('pre-op', trusted.preop_action, trusted.preop_extracted, trusted.preop_timing_raw)}; "
+        f"{side('post-op', trusted.postop_action, trusted.postop_extracted, trusted.postop_timing_raw)}"
     )
 
 

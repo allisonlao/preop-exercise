@@ -584,11 +584,26 @@ def test_postop_timing_never_gates_the_decision() -> None:
     assert_postop_missing(warfarin_plan_facts(PostopAction.DEFERRED, postop_timing="after surgery"))
 
 
-@pytest.mark.xfail(strict=True, reason="Layer 3 (deterministic deferral check on the quote) is not implemented yet")
-def test_resume_label_on_a_deferral_quote_is_still_missing() -> None:
+def test_resume_label_on_a_deferral_quote_is_downgraded_by_the_quote_check() -> None:
     # The pre-enum extraction's mistake carried into the new schema: a verified
     # deferral sentence labeled as a firm RESUME.
-    assert_postop_missing(warfarin_plan_facts(PostopAction.RESUME))
+    facts = warfarin_plan_facts(PostopAction.RESUME)
+    assert_postop_missing(facts)
+    (plan,) = facts.anticoagulation_plans
+    assert plan.evidence[0].detail == (
+        "plan for warfarin: pre-op HOLD (5 days before surgery); post-op UNCLEAR [extracted as RESUME]"
+    )
+
+
+def test_resume_label_on_a_bare_hand_off_becomes_deferred() -> None:
+    text = "CARDIOLOGY NOTE\n1. Hold apixaban for the 2 days before surgery. Resume apixaban per cardiology."
+    plan = plan_doc("a", text, "apixaban", "Hold apixaban for the 2 days before surgery",
+                    "Resume apixaban per cardiology", text.splitlines()[1])
+    structured = submission(documents=[*BASE_DOCS, ("a", "2026-03-03")], medications=APIXABAN_ACTIVE)
+    facts = reconcile_patient_facts(structured, [*base_extractions(), plan])
+    (resolved,) = facts.anticoagulation_plans
+    assert resolved.postop_instruction is None and resolved.hedged
+    assert evaluate(facts).decision is Decision.NEEDS_FOLLOW_UP
 
 
 # =============================================================================

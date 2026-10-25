@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import copy
 import json
+import logging
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
@@ -17,8 +18,10 @@ import pytest
 from openai import OpenAI
 
 import extract
+import reconcile
 from core import PatientSubmission, TriageOutput, triage_submission
 from extract import ExtractionCache
+from llm_fixtures import case_00020
 from models import Decision, IssueCategory, ReasonCode
 from packet import CheckId
 
@@ -69,16 +72,17 @@ RESPONSES: dict[str, dict[str, Any]] = {
 
 
 class FakeCompletions:
-    """``client.chat.completions`` stand-in answering from RESPONSES by document text."""
+    """``client.chat.completions`` stand-in answering by document text (RESPONSES by default)."""
 
-    def __init__(self) -> None:
+    def __init__(self, responses: dict[str, dict[str, Any]] | None = None) -> None:
         self.calls = 0
+        self.responses = RESPONSES if responses is None else responses
 
     def parse(self, **kwargs: Any) -> SimpleNamespace:
         self.calls += 1
         wrapped: str = kwargs["messages"][1]["content"]
         text = wrapped.removeprefix("<untrusted_document>\n").removesuffix("\n</untrusted_document>")
-        content = json.dumps(RESPONSES[text])
+        content = json.dumps(self.responses[text])
         message = SimpleNamespace(content=content, parsed=object(), refusal=None)
         return SimpleNamespace(choices=[SimpleNamespace(message=message, finish_reason="stop")])
 
@@ -220,6 +224,36 @@ def test_document_without_text_or_id_fails_closed(submission: dict[str, Any], ca
     output = triage_submission(submission, client=fake_client(FakeCompletions()), cache=cache)
     (failed,) = [i for i in output.issues if i.reason_code == ReasonCode.EXTRACTION_FAILED]
     assert {e.source for e in failed.evidence} == {"doc:blank", "json:documents[3]"}
+
+
+# =============================================================================
+# case_00020: post-op deferral extracted as RESUME
+# =============================================================================
+
+
+def test_case_00020_deferral_is_caught_even_when_extracted_as_resume(
+    cache: ExtractionCache, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    case = case_00020()
+    replay = case["replay_responses_resume_on_deferral"]
+    by_text = {doc["text"]: replay[doc["doc_id"]] for doc in case["submission"]["documents"]}
+    client = fake_client(FakeCompletions(by_text))
+
+    with caplog.at_level(logging.WARNING, logger="reconcile"):
+        output = triage_submission(case["submission"], client=client, cache=cache)
+
+    assert output.decision == case["label"]["decision"] == Decision.NEEDS_FOLLOW_UP
+    assert {issue.category for issue in output.issues} == set(case["label"]["categories"])
+    (issue,) = output.issues
+    assert issue.reason_code == ReasonCode.ANTICOAG_PLAN_POSTOP_MISSING
+    (plan_evidence,) = [e for e in issue.evidence if (e.detail or "").startswith("plan for warfarin")]
+    assert plan_evidence.detail is not None and "post-op UNCLEAR [extracted as RESUME]" in plan_evidence.detail
+    assert case["deferral_sentence"] in (plan_evidence.quote or "")
+    assert "post-op action for warfarin downgraded from RESUME to UNCLEAR" in caplog.text
+
+    # The same extraction without the quote check is the original false READY.
+    monkeypatch.setattr(reconcile, "check_instruction", lambda action, quote: action)
+    assert triage_submission(case["submission"], client=client, cache=cache).decision == Decision.READY
 
 
 # =============================================================================
