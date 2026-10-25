@@ -59,8 +59,12 @@ from schemas import (
     DocumentType,
     ExtractedDocument,
     ExtractionStatus,
+    POSTOP_INSTRUCTIONS,
+    PREOP_INSTRUCTIONS,
     HnPState,
     MedStatus,
+    PostopAction,
+    PreopAction,
     QuotedFact,
     VitalMention,
     VitalType,
@@ -117,8 +121,29 @@ class TrustedMedication:
 @dataclass(frozen=True)
 class TrustedPlan:
     index: int  # position in the extracted list; keeps plan ids stable
-    plan: AnticoagulationPlanMention
+    drug_name_raw: str
     quote: str
+    preop_action: PreopAction  # UNCLEAR when its quote did not verify
+    preop_quote: str | None
+    preop_timing_raw: str | None
+    postop_action: PostopAction  # UNCLEAR when its quote did not verify
+    postop_quote: str | None
+    postop_timing_raw: str | None  # evidence text only; never gates a decision
+
+
+def trusted_plan(index: int, fact: QuotedFact[AnticoagulationPlanMention]) -> TrustedPlan:
+    mention = fact.value
+    return TrustedPlan(
+        index=index,
+        drug_name_raw=mention.drug_name_raw,
+        quote=fact.quote,
+        preop_action=trusted_value(mention.preop_action) or PreopAction.UNCLEAR,
+        preop_quote=mention.preop_action.quote if mention.preop_action.verified else None,
+        preop_timing_raw=mention.preop_timing_raw,
+        postop_action=trusted_value(mention.postop_action) or PostopAction.UNCLEAR,
+        postop_quote=mention.postop_action.quote if mention.postop_action.verified else None,
+        postop_timing_raw=mention.postop_timing_raw,
+    )
 
 
 @dataclass(frozen=True)
@@ -196,7 +221,7 @@ def filter_unverified(doc: ExtractedDocument, header: DocumentHeader | None, fal
             for m in doc.medication_mentions
         ),
         plans=tuple(
-            TrustedPlan(index, p.value, p.quote) for index, p in enumerate(doc.anticoagulation_plans) if p.verified
+            trusted_plan(index, p) for index, p in enumerate(doc.anticoagulation_plans) if p.verified
         ),
     )
 
@@ -724,19 +749,34 @@ def plans_contradict(a: AnticoagulationPlan, b: AnticoagulationPlan) -> bool:
 
 
 def _plan_from(doc: TrustedDocument, trusted: TrustedPlan) -> AnticoagulationPlan:
-    mention = trusted.plan
-    _, generic = classify_drug(mention.drug_name_raw)
-    preop = mention.preop_instruction or None
+    _, generic = classify_drug(trusted.drug_name_raw)
+    # Only an instruction action carries text into the engine; DEFERRED,
+    # NOT_ADDRESSED and UNCLEAR (including unverified) become a missing instruction.
+    preop = (trusted.preop_quote or None) if trusted.preop_action in PREOP_INSTRUCTIONS else None
+    postop = (trusted.postop_quote or None) if trusted.postop_action in POSTOP_INSTRUCTIONS else None
     return AnticoagulationPlan(
         plan_id=f"{doc.doc_id}:plan[{trusted.index}]",
         document_id=doc.doc_id,
         written_on=doc.documented_on,
-        drugs_addressed=(generic or mention.drug_name_raw,),
+        drugs_addressed=(generic or trusted.drug_name_raw,),
         preop_instruction=preop,
-        preop_timing_specified=preop is not None and bool(mention.preop_timing_raw),
-        postop_instruction=mention.postop_instruction or None,
-        hedged=mention.is_hedged,
-        evidence=(doc_evidence(doc, trusted.quote, f"plan for {mention.drug_name_raw}"),),
+        preop_timing_specified=preop is not None and bool(trusted.preop_timing_raw),
+        postop_instruction=postop,
+        hedged=PreopAction.DEFERRED is trusted.preop_action or PostopAction.DEFERRED is trusted.postop_action,
+        evidence=(doc_evidence(doc, trusted.quote, plan_detail(trusted)),),
+    )
+
+
+def plan_detail(trusted: TrustedPlan) -> str:
+    """Evidence detail such as ``plan for warfarin: pre-op HOLD (5 days before surgery); post-op DEFERRED``."""
+
+    def side(name: str, action: str, timing: str | None) -> str:
+        return f"{name} {action}" + (f" ({timing})" if timing else "")
+
+    return (
+        f"plan for {trusted.drug_name_raw}: "
+        f"{side('pre-op', trusted.preop_action, trusted.preop_timing_raw)}; "
+        f"{side('post-op', trusted.postop_action, trusted.postop_timing_raw)}"
     )
 
 

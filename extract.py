@@ -66,11 +66,12 @@ SECTIONS
   Do not include clinician names.
 - hnp_details: only when the document is a history and physical.
   completion = COMPLETE when it documents both history and physical exam and is signed
-  or finalized; INCOMPLETE when it is a draft, unsigned, pending, or missing the exam;
+  or finalized; INCOMPLETE when it is a draft, unsigned, pending, "to be completed", or
+  missing the exam;
   UNCLEAR otherwise. date_of_service = the date of service as written.
 - consent_details: only for consent documents. signature_states lists every statement
   about the PATIENT's (or legal representative's) signature: SIGNED, UNSIGNED (blank or
-  not signed), PENDING (sent / awaiting / not completed), VERBAL_ONLY, REVOKED
+  not signed), PENDING (sent / awaiting / "to be signed" / not completed), VERBAL_ONLY, REVOKED
   (withdrawn or rescinded), UNCLEAR. A clinician or physician attestation signature is
   NOT a patient signature. procedure = the procedure named on the consent as written.
 - vitals_mentions: every blood pressure and temperature reading that has an actual
@@ -82,13 +83,10 @@ SECTIONS
   A drug that appears only as a planned future step (e.g. a bridging regimen inside a
   perioperative plan) is not a medication mention; record it in anticoagulation_plans.
 - anticoagulation_plans: every perioperative management plan for a blood thinner
-  (anticoagulant or antiplatelet). preop_instruction / postop_instruction are the
-  instruction texts as written, or null when absent. preop_timing_raw is the timing
-  phrase from the pre-op instruction, or null if no timing is given.
-  is_hedged = true when the plan defers or does not commit to a decision (e.g. "to be
-  determined", "will follow up with recommendations", "consider holding", "defer to").
-  A firm instruction with a clinical condition (e.g. "resume once hemostasis is secure")
-  is not hedged.
+  (anticoagulant or antiplatelet). preop_action / postop_action each take one value
+  from their enum, quoting the sentence that states it; use NOT_ADDRESSED with an
+  empty quote when that side is not mentioned. preop_timing_raw / postop_timing_raw
+  are the timing phrases as written, or null if none is given.
 - lab_mentions: every laboratory test mentioned, with its date and result as written
   (null when absent).
 - date_risk_mentions: every statement of the scheduled procedure date (PROCEDURE_DATE)
