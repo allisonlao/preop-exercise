@@ -97,7 +97,35 @@ make typecheck   # mypy --strict
   All policy thresholds and windows are constants at the top of the file.
 - `preprocess.py`: Stage 2 structured-data parsing (labs, vitals, medications,
   demographics) with lab and drug lookup tables. Records that are read but not
-  used are returned in `excluded` with a reason, never dropped silently.
+   used are returned in `excluded` with a reason, never dropped silently.
+- `schemas.py`: Stage 3 LLM output schema (`ExtractedDocument`). Every fact is a
+  `QuotedFact[T]` (`value`, verbatim `quote`, `verified`). Values are raw text as
+  written; enums fall back to `UNCLEAR`. `verified` and `extraction_status` are
+  hidden from the model's JSON schema.
+- `extract.py`: `extract_document(doc_text, doc_id, client)` makes one GPT-4o
+  Structured Outputs call per document, with the document wrapped in
+  `<untrusted_document>` tags. Raw responses are cached in `data/llm_cache.json`
+  under SHA-256(document text + system prompt + schema name). Cache hits need no
+  API key. Any failure returns `extraction_status = FAILED` and never raises.
+- `verify.py`: `verify_extracted_document(doc, original_text)` checks every quote
+  against the source after NFKC and whitespace normalization. Quotes under 4
+  characters or containing an ellipsis are rejected. Facts that fail are kept with
+  `verified = False` (fail closed), never deleted.
+- `reconcile.py`: Stage 4. `reconcile_patient_facts(structured, extracted_docs)`
+  merges the Stage 2 structured facts with the verified Stage 3 document facts into
+  `ReconciledPatientFacts`. It is pure Python with no LLM calls.
+  - Unverified quotes are first mapped to "absent" or `UNCLEAR`.
+  - The procedure date and risk level come only from the JSON.
+  - All H&Ps are kept, newest first. Only the most recent consent is kept.
+  - Note vitals are merged with the structured vitals, newest first. Date-only
+    readings are evaluated worst-case.
+  - Each drug's status comes from the JSON flag and the latest dated note mention.
+    A disagreement between them is a `CONFLICT`.
+  - Plans for the same drug with contradictory pre-op instructions are flagged as
+    conflicting.
+  - Failed or missing extractions, malformed vital or medication records, and
+    unreadable recent vitals become `unreadable_sources`. The engine reports these
+    as `EXTRACTION_FAILED` (`MISSING_REQUIRED_DATA`).
 - `scorer.py`: offline scoring harness.
 - `tests/test_gold_cases.py`: hand-reconciled facts for 19 sample cases, checked
   against their labels.

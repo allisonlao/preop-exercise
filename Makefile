@@ -49,10 +49,10 @@ typecheck:
 		--with 'mypy>=1.10' \
 		mypy --strict --explicit-package-bases \
 		models.py engine.py preprocess.py scorer.py \
-		schemas.py extract.py verify.py \
+		schemas.py extract.py verify.py reconcile.py \
 		tests/fact_builders.py tests/llm_fixtures.py tests/test_engine.py \
 		tests/test_gold_cases.py tests/test_preprocess.py tests/test_scorer.py \
-		tests/test_extract.py tests/test_verify.py
+		tests/test_extract.py tests/test_verify.py tests/test_reconcile.py
 
 all: baseline evals determinism score
 
