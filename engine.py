@@ -174,6 +174,18 @@ def check_preconditions(facts: ReconciledPatientFacts) -> list[Issue]:
             )
         )
 
+    if facts.unreadable_sources:
+        issues.append(
+            _issue(
+                ReasonCode.EXTRACTION_FAILED,
+                RuleId.R0_PRECONDITIONS,
+                f"{len(facts.unreadable_sources)} source item(s) could not be read reliably; "
+                "any facts they contain are unknown.",
+                facts.unreadable_sources,
+                "Review the listed documents or records manually, then re-run triage.",
+            )
+        )
+
     return issues
 
 

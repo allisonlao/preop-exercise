@@ -356,6 +356,10 @@ class AnticoagulationPlan(_Fact):
     conflicts_with: tuple[str, ...] = ()
     evidence: tuple[Evidence, ...] = Field(min_length=1)
 
+    @property
+    def has_conflicting_plans(self) -> bool:
+        return bool(self.conflicts_with)
+
     @field_validator("drugs_addressed")
     @classmethod
     def _normalize_drugs(cls, value: tuple[str, ...]) -> tuple[str, ...]:
@@ -408,6 +412,10 @@ class ReconciledPatientFacts(_Fact):
     anticoagulation_plans: tuple[AnticoagulationPlan, ...] = ()
     blood_pressures: tuple[BloodPressureReading, ...] = ()
     temperatures: tuple[TemperatureReading, ...] = ()
+    # Sources whose content is unknown (failed extraction, unreadable record,
+    # unverifiable recent vital). Any entry fails closed as MISSING_REQUIRED_DATA,
+    # because the unknown content could hide a blocking fact.
+    unreadable_sources: tuple[Evidence, ...] = ()
 
     @model_validator(mode="after")
     def _medications_are_merged(self) -> Self:

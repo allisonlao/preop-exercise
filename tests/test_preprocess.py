@@ -18,6 +18,7 @@ from preprocess import (
     ANTIPLATELET_LOOKUP,
     ExclusionReason,
     classify_drug,
+    extract_document_headers,
     extract_patient_demographics,
     extract_structured_labs,
     extract_structured_medications,
@@ -41,6 +42,26 @@ def temp_record(**fields: Any) -> dict[str, Any]:
 # =============================================================================
 # Labs
 # =============================================================================
+
+
+def test_document_headers_keep_id_title_and_date() -> None:
+    result = extract_document_headers(
+        {
+            "documents": [
+                {"doc_id": "d1", "type": "H&P Note", "date": "2026-02-07", "author": "A", "text": "..."},
+                {"doc_id": "d2", "type": "Consent", "date": "not a date"},
+                {"type": "orphan"},
+            ]
+        }
+    )
+    assert [(h.doc_id, h.title, h.documented_on) for h in result.documents] == [
+        ("d1", "H&P Note", date(2026, 2, 7)),
+        ("d2", "Consent", None),
+    ]
+    assert [(e.locator, e.reason) for e in result.excluded] == [
+        ("documents[d2].date", ExclusionReason.MALFORMED),
+        ("documents[2]", ExclusionReason.MALFORMED),
+    ]
 
 
 @pytest.mark.parametrize("status", ["entered-in-error", "cancelled", "preliminary", "registered", None, ""])

@@ -79,6 +79,8 @@ SECTIONS
 - medication_mentions: every medication mentioned, with its status in this document:
   CURRENT (taking / continue / active), STOPPED (discontinued / stopped / replaced),
   HELD (temporarily held or paused), UNCLEAR (unknown, unsure, or contradictory).
+  A drug that appears only as a planned future step (e.g. a bridging regimen inside a
+  perioperative plan) is not a medication mention; record it in anticoagulation_plans.
 - anticoagulation_plans: every perioperative management plan for a blood thinner
   (anticoagulant or antiplatelet). preop_instruction / postop_instruction are the
   instruction texts as written, or null when absent. preop_timing_raw is the timing

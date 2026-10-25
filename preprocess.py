@@ -229,6 +229,25 @@ class DemographicsExtraction(BaseModel):
     excluded: tuple[ExcludedRecord, ...]
 
 
+class DocumentHeader(BaseModel):
+    """Structured metadata of one document (the text itself goes to Stage 3)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    doc_id: str
+    title: str | None
+    # The document's JSON ``date``; used to date note vitals and order mentions.
+    documented_on: date | None
+    author: str | None
+
+
+class DocumentExtraction(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    documents: tuple[DocumentHeader, ...]
+    excluded: tuple[ExcludedRecord, ...]
+
+
 class StructuredSubmission(BaseModel):
     """Everything Stage 2 extracts from one submission."""
 
@@ -239,6 +258,7 @@ class StructuredSubmission(BaseModel):
     blood_pressures: tuple[BloodPressureReading, ...]
     temperatures: tuple[TemperatureReading, ...]
     medications: tuple[StructuredMedication, ...]
+    documents: tuple[DocumentHeader, ...] = ()
     excluded: tuple[ExcludedRecord, ...]
 
 
@@ -599,6 +619,41 @@ def extract_patient_demographics(submission: Mapping[str, Any]) -> DemographicsE
 
 
 # =============================================================================
+# Document headers
+# =============================================================================
+
+
+def extract_document_headers(submission: Mapping[str, Any]) -> DocumentExtraction:
+    """Document id, title, date, and author. A document without an id is malformed."""
+
+    headers: list[DocumentHeader] = []
+    excluded = _non_objects(submission, "documents")
+    for locator, record in _records(submission, "documents"):
+        doc_id = _optional_str(record.get("doc_id"))
+        if doc_id is None:
+            excluded.append(ExcludedRecord(locator=locator, reason=ExclusionReason.MALFORMED, detail="doc_id is missing"))
+            continue
+        documented_on = parse_calendar_date(record.get("date"))
+        if record.get("date") is not None and documented_on is None:
+            excluded.append(
+                ExcludedRecord(
+                    locator=f"documents[{doc_id}].date",
+                    reason=ExclusionReason.MALFORMED,
+                    detail=f"unparseable date {record.get('date')!r}; document kept as undated",
+                )
+            )
+        headers.append(
+            DocumentHeader(
+                doc_id=doc_id,
+                title=_optional_str(record.get("type")),
+                documented_on=documented_on,
+                author=_optional_str(record.get("author")),
+            )
+        )
+    return DocumentExtraction(documents=tuple(headers), excluded=tuple(excluded))
+
+
+# =============================================================================
 # Entry point
 # =============================================================================
 
@@ -610,11 +665,13 @@ def preprocess_submission(submission: Mapping[str, Any]) -> StructuredSubmission
     labs = extract_structured_labs(submission)
     vitals = extract_structured_vitals(submission)
     medications = extract_structured_medications(submission)
+    documents = extract_document_headers(submission)
     excluded: Sequence[ExcludedRecord] = (
         *demographics.excluded,
         *labs.excluded,
         *vitals.excluded,
         *medications.excluded,
+        *documents.excluded,
     )
     return StructuredSubmission(
         demographics=demographics.demographics,
@@ -622,5 +679,6 @@ def preprocess_submission(submission: Mapping[str, Any]) -> StructuredSubmission
         blood_pressures=vitals.blood_pressures,
         temperatures=vitals.temperatures,
         medications=medications.medications,
+        documents=documents.documents,
         excluded=tuple(excluded),
     )
