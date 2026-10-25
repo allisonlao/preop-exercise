@@ -1,0 +1,56 @@
+{
+  "1f5be5f7-1a56-5e66-9c45-2e94e55b0271": {
+    "doc_metadata": {
+      "document_type": {"value": "NURSING_ASSESSMENT", "quote": "PRE-OP NURSING ASSESSMENT"}
+    },
+    "patient_identifiers": [],
+    "hnp_details": null,
+    "consent_details": null,
+    "vitals_mentions": [
+      {
+        "value": {"vital_type": "BLOOD_PRESSURE", "raw_value": "189/112", "raw_unit": null, "time_raw": "08:06"},
+        "quote": "08:06  NIBP 189/112, T 37.1 C"
+      },
+      {
+        "value": {"vital_type": "TEMPERATURE", "raw_value": "37.1", "raw_unit": "C", "time_raw": "08:06"},
+        "quote": "08:06  NIBP 189/112, T 37.1 C, HR 74"
+      },
+      {
+        "value": {"vital_type": "BLOOD_PRESSURE", "raw_value": "137/78", "raw_unit": "mmHg", "time_raw": "08:30"},
+        "quote": "ADDENDUM 08:30: Re-measured 137/78 mmHg following 24 minutes in a quiet room."
+      }
+    ],
+    "medication_mentions": [
+      {"value": {"drug_name_raw": "sertraline", "status": "CURRENT"}, "quote": "sertraline 50 mg PO daily - taking as prescribed"},
+      {"value": {"drug_name_raw": "tamsulosin", "status": "CURRENT"}, "quote": "tamsulosin 0.4 mg PO nightly - taking as prescribed"},
+      {"value": {"drug_name_raw": "acetaminophen", "status": "CURRENT"}, "quote": "acetaminophen 650 mg PO q6h PRN pain - taking as prescribed"},
+      {"value": {"drug_name_raw": "ASA", "status": "CURRENT"}, "quote": "ASA 81 mg PO daily - taking as prescribed"}
+    ],
+    "anticoagulation_plans": [],
+    "lab_mentions": [],
+    "date_risk_mentions": []
+  },
+  "fdce8743-2288-5749-b5df-f9f191788315": {
+    "doc_metadata": {
+      "document_type": {"value": "SURGICAL_CONSENT", "quote": "INFORMED CONSENT FOR SURGICAL PROCEDURE"}
+    },
+    "patient_identifiers": [
+      {"value": {"kind": "NAME", "raw_value": "Ethan Haddad"}, "quote": "I, Ethan Haddad, authorize the surgeon"}
+    ],
+    "hnp_details": null,
+    "consent_details": {
+      "signature_states": [
+        {
+          "value": "PENDING",
+          "quote": "E-signature request sent to patient portal 02/24/2026 09:46; status: NOT COMPLETED as of this note."
+        }
+      ],
+      "procedure": {"value": "carpal tunnel release", "quote": "Procedure: carpal tunnel release"}
+    },
+    "vitals_mentions": [],
+    "medication_mentions": [],
+    "anticoagulation_plans": [],
+    "lab_mentions": [],
+    "date_risk_mentions": []
+  }
+}

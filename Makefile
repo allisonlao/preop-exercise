@@ -43,13 +43,16 @@ test:
 
 typecheck:
 	MYPYPATH=tests uv run \
+		--with 'openai>=2.0.0' \
 		--with 'pydantic>=2.8.0' \
 		--with 'pytest>=8.0.0' \
 		--with 'mypy>=1.10' \
 		mypy --strict --explicit-package-bases \
 		models.py engine.py preprocess.py scorer.py \
-		tests/fact_builders.py tests/test_engine.py tests/test_gold_cases.py \
-		tests/test_preprocess.py tests/test_scorer.py
+		schemas.py extract.py verify.py \
+		tests/fact_builders.py tests/llm_fixtures.py tests/test_engine.py \
+		tests/test_gold_cases.py tests/test_preprocess.py tests/test_scorer.py \
+		tests/test_extract.py tests/test_verify.py
 
 all: baseline evals determinism score
 
