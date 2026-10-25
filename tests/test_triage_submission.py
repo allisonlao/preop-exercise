@@ -21,7 +21,7 @@ import extract
 import reconcile
 from core import PatientSubmission, TriageOutput, triage_submission
 from extract import ExtractionCache
-from llm_fixtures import case_00020
+from llm_fixtures import case_00020, patient_reported_anticoagulants
 from models import Decision, IssueCategory, ReasonCode
 from packet import CheckId
 
@@ -254,6 +254,42 @@ def test_case_00020_deferral_is_caught_even_when_extracted_as_resume(
     # The same extraction without the quote check is the original false READY.
     monkeypatch.setattr(reconcile, "check_instruction", lambda action, quote: action)
     assert triage_submission(case["submission"], client=client, cache=cache).decision == Decision.READY
+
+
+# =============================================================================
+# Patient-reported anticoagulant missing from the medication list
+# =============================================================================
+
+REPORTED_CASES = patient_reported_anticoagulants()
+
+
+def run_reported_case(case_id: str, status: str, cache: ExtractionCache) -> TriageOutput:
+    """Replay the case's real extractions with the reported-use sentence set to ``status``."""
+
+    case = copy.deepcopy(REPORTED_CASES[case_id])
+    for response in case["responses"].values():
+        for mention in response["medication_mentions"]:
+            if mention["quote"] == case["reported_quote"]:
+                mention["value"]["status"] = status
+    by_text = {doc["text"]: case["responses"][doc["doc_id"]] for doc in case["submission"]["documents"]}
+    return triage_submission(case["submission"], client=fake_client(FakeCompletions(by_text)), cache=cache)
+
+
+@pytest.mark.parametrize("case_id", sorted(REPORTED_CASES))
+def test_patient_reported_anticoagulant_as_current_matches_label(case_id: str, cache: ExtractionCache) -> None:
+    label = REPORTED_CASES[case_id]["label"]
+    output = run_reported_case(case_id, "CURRENT", cache)
+    assert output.decision == label["decision"], output.explanation
+    assert {issue.category for issue in output.issues} == set(label["categories"])
+
+
+@pytest.mark.parametrize("case_id", ["case_00000", "case_00027"])
+def test_patient_reported_anticoagulant_as_unclear_fails_closed(case_id: str, cache: ExtractionCache) -> None:
+    # What the model returned before the prompt rule: never READY, but the wrong category.
+    assert REPORTED_CASES[case_id]["extracted_status"] == "UNCLEAR"
+    output = run_reported_case(case_id, "UNCLEAR", cache)
+    assert output.decision == Decision.NEEDS_FOLLOW_UP
+    assert {issue.reason_code for issue in output.issues} == {ReasonCode.ANTICOAG_STATUS_UNKNOWN}
 
 
 # =============================================================================
