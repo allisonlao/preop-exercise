@@ -13,7 +13,7 @@ Replaces the OpenAI Evals upload previously used by ``make evals``. Reports:
 * a decision confusion matrix (rows = label, columns = prediction, plus INVALID),
 * the false-READY count (predicted READY when the label is not READY; target 0),
 * precision / recall per issue category (set-based per case),
-* strict-schema validity against ``models.TriageResult``.
+* strict-schema validity against ``packet.TriageOutput`` (the pipeline output).
 
 It also writes a JSON report that ``view_report.py`` can open: per-record
 ``metrics`` keep the legacy names (``json_schema_valid``,
@@ -38,7 +38,8 @@ from typing import Any, Final
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-from models import Decision, IssueCategory, TriageResult
+from models import Decision, IssueCategory
+from packet import TriageOutput
 
 ROOT = Path(__file__).resolve().parent
 
@@ -157,7 +158,7 @@ class CaseScore:
     predicted_decision: str  # a Decision value, or INVALID
     predicted_categories: frozenset[IssueCategory]
     scorable: bool  # decision + category enums parse (legacy "json_schema_valid")
-    strict_schema_valid: bool  # validates against models.TriageResult
+    strict_schema_valid: bool  # validates against packet.TriageOutput
     error: str | None = None
 
     @property
@@ -206,7 +207,7 @@ def score_case(label: CaseLabel, case_id: str, prediction: Prediction | None) ->
         return invalid(f"unscorable output: {exc.error_count()} validation error(s)")
 
     try:
-        TriageResult.model_validate(prediction.output)
+        TriageOutput.model_validate(prediction.output)
         strict_ok = True
     except ValidationError:
         strict_ok = False

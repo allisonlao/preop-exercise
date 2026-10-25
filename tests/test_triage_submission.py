@@ -1,142 +1,237 @@
+"""End-to-end tests for the staged pipeline in ``core.triage_submission``.
+
+The OpenAI client is faked: it answers each document with a canned extraction
+keyed by the document text, so every stage after the LLM call (verification,
+reconciliation, engine, evidence packet) runs for real. No network.
+"""
+
 from __future__ import annotations
 
+import copy
 import json
-import sys
+from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import Mock
+from typing import Any, cast
 
 import pytest
-from pydantic import ValidationError
+from openai import OpenAI
 
-from core import (
-    BASELINE_SYSTEM_PROMPT,
-    PatientSubmission,
-    TriageOutput,
-    triage_output_json_schema,
-    triage_submission,
-)
+import extract
+from core import PatientSubmission, TriageOutput, triage_submission
+from extract import ExtractionCache
+from models import Decision, IssueCategory, ReasonCode
+from packet import CheckId
+
+HP_TEXT = """HISTORY & PHYSICAL - PRE-OP
+Date of service: 01/20/2026
+Planned procedure: carpal tunnel release
+PHYSICAL EXAM:
+  Vitals 10:05  BP: 118/80, 97.8 F
+Electronically signed by Dr. Lee on 01/20/2026."""
+
+CONSENT_TEXT = """INFORMED CONSENT FOR SURGICAL PROCEDURE
+Procedure: carpal tunnel release
+Patient signature: /s/ Grace Lopez (electronically signed 01/22/2026 08:05)"""
+
+
+def _fact(value: Any, quote: str) -> dict[str, Any]:
+    return {"value": value, "quote": quote}
+
+
+def _response(**sections: Any) -> dict[str, Any]:
+    base: dict[str, Any] = {
+        "patient_identifiers": [], "hnp_details": None, "consent_details": None, "vitals_mentions": [],
+        "medication_mentions": [], "anticoagulation_plans": [], "lab_mentions": [], "date_risk_mentions": [],
+    }
+    return {**base, **sections}
+
+
+RESPONSES: dict[str, dict[str, Any]] = {
+    HP_TEXT: _response(
+        doc_metadata={"document_type": _fact("HISTORY_AND_PHYSICAL", "HISTORY & PHYSICAL - PRE-OP")},
+        hnp_details={
+            "completion": _fact("COMPLETE", "Electronically signed by Dr. Lee on 01/20/2026."),
+            "date_of_service": _fact("01/20/2026", "Date of service: 01/20/2026"),
+        },
+        vitals_mentions=[
+            _fact({"vital_type": "BLOOD_PRESSURE", "raw_value": "118/80", "raw_unit": None, "time_raw": "10:05"},
+                  "Vitals 10:05  BP: 118/80"),
+        ],
+    ),
+    CONSENT_TEXT: _response(
+        doc_metadata={"document_type": _fact("SURGICAL_CONSENT", "INFORMED CONSENT FOR SURGICAL PROCEDURE")},
+        consent_details={
+            "signature_states": [_fact("SIGNED", "Patient signature: /s/ Grace Lopez (electronically signed 01/22/2026 08:05)")],
+            "procedure": _fact("carpal tunnel release", "Procedure: carpal tunnel release"),
+        },
+    ),
+}
+
+
+class FakeCompletions:
+    """``client.chat.completions`` stand-in answering from RESPONSES by document text."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def parse(self, **kwargs: Any) -> SimpleNamespace:
+        self.calls += 1
+        wrapped: str = kwargs["messages"][1]["content"]
+        text = wrapped.removeprefix("<untrusted_document>\n").removesuffix("\n</untrusted_document>")
+        content = json.dumps(RESPONSES[text])
+        message = SimpleNamespace(content=content, parsed=object(), refusal=None)
+        return SimpleNamespace(choices=[SimpleNamespace(message=message, finish_reason="stop")])
+
+
+def fake_client(completions: FakeCompletions) -> OpenAI:
+    return cast(OpenAI, SimpleNamespace(chat=SimpleNamespace(completions=completions)))
+
+
+@pytest.fixture(autouse=True)
+def _isolated(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    # No real API key and no access to the real data/llm_cache.json.
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setattr(extract, "_default_cache", ExtractionCache(tmp_path / "default_cache.json"))
 
 
 @pytest.fixture
-def openai_client(monkeypatch: pytest.MonkeyPatch) -> Mock:
-    client = Mock()
-    client.responses.create.return_value = SimpleNamespace(
-        output_text=json.dumps(
-            {
-                "decision": "READY",
-                "issues": [],
-                "explanation": "All required criteria are satisfied.",
-            }
-        ),
-    )
-
-    monkeypatch.setitem(sys.modules, "openai", SimpleNamespace(OpenAI=lambda: client))
-    return client
+def cache(tmp_path: Path) -> ExtractionCache:
+    return ExtractionCache(tmp_path / "llm_cache.json")
 
 
 @pytest.fixture
-def submission_payload() -> dict[str, object]:
+def submission() -> dict[str, Any]:
     return {
-        "patient": {"id": "patient-1"},
+        "patient": {"id": "patient-1", "mrn": "MRN-1", "name": {"given": "Grace", "family": "Lopez"}},
         "procedure": {
             "case_id": "case-1",
+            "procedure_type": "Elective carpal tunnel release",
             "procedure_risk": "LOW",
             "procedure_date": "2026-02-01",
         },
         "vitals": [
-            {
-                "type": "blood_pressure",
-                "systolic": 120,
-                "diastolic": 80,
-                "date": "2026-01-25",
-            }
+            {"type": "blood_pressure", "systolic": 124, "diastolic": 78, "date": "2026-01-25T09:00:00Z"},
+            {"type": "temperature", "value_f": 98.1, "date": "2026-01-25T09:05:00Z"},
         ],
-        "labs": [
-            {
-                "code": "CBC",
-                "display": "Complete blood count",
-                "effective_at": "2026-01-20",
-                "status": "final",
-            }
-        ],
-        "medications": [],
-        "conditions": [],
+        "labs": [{"id": "l1", "code": "CBC", "display": "Complete blood count",
+                  "effective_at": "2026-01-20T08:00:00Z", "status": "final"}],
+        "medications": [{"name": "ASA 81 mg PO daily", "active": True}],
         "documents": [
-            {
-                "type": "history_and_physical",
-                "date": "2026-01-20",
-                "text": "History and physical completed.",
-            },
-            {
-                "type": "surgical_consent",
-                "date": "2026-01-22",
-                "text": "Signed surgical consent.",
-            },
+            {"doc_id": "hp-1", "type": "H&P", "date": "2026-01-20", "text": HP_TEXT},
+            {"doc_id": "consent-1", "type": "Consent", "date": "2026-01-22", "text": CONSENT_TEXT},
         ],
     }
 
 
-def test_triage_submission_returns_structured_output(
-    openai_client: Mock,
-    submission_payload: dict[str, object],
-) -> None:
-    output = triage_submission(submission_payload, model="test-model")
+def canonical(output: TriageOutput) -> str:
+    return json.dumps(output.model_dump(), sort_keys=True, separators=(",", ":"))
 
-    assert isinstance(output, TriageOutput)
-    assert output.decision == "READY"
+
+# =============================================================================
+# READY path and the passed-checks packet
+# =============================================================================
+
+
+def test_ready_case_lists_why_every_check_passed(submission: dict[str, Any], cache: ExtractionCache) -> None:
+    completions = FakeCompletions()
+    output = triage_submission(submission, model="gpt-4o", client=fake_client(completions), cache=cache)
+
+    assert output.decision == Decision.READY, output.explanation
     assert output.issues == []
-    assert output.explanation == "All required criteria are satisfied."
+    assert completions.calls == 2
 
-    assert openai_client.responses.create.call_count == 1
-    call = openai_client.responses.create.call_args.kwargs
-    assert call["model"] == "test-model"
-    assert call["instructions"] == BASELINE_SYSTEM_PROMPT
+    checks = {check.check: check for check in output.passed_checks}
+    assert list(checks) == sorted(checks)
+    assert set(checks) == {
+        "R0_PROCEDURE_DATA", "R0_SOURCES_READABLE", "R1_CONSENT", "R1_HISTORY_AND_PHYSICAL",
+        "R2_CBC", "R3_ANTICOAGULATION", "R4_BLOOD_PRESSURE", "R4_TEMPERATURE",
+    }
+    assert "Completed H&P dated 2026-01-20 (12 days before" in checks[CheckId.HISTORY_AND_PHYSICAL].description
+    assert "Most recent BP: 124/78 mmHg on 2026-01-25 09:00 UTC" in checks[CheckId.BLOOD_PRESSURE].description
+    assert "98.1 F on 2026-01-25 09:05 UTC" in checks[CheckId.TEMPERATURE].description
+    assert "CBC collected 2026-01-20 (12 days before" in checks[CheckId.CBC].description
+    assert "aspirin do not require a plan" in checks[CheckId.ANTICOAGULATION].description
 
-    text_config = call["text"]
-    assert isinstance(text_config, dict)
-    response_format = text_config["format"]
-    assert isinstance(response_format, dict)
-    assert response_format["type"] == "json_schema"
-    assert response_format["name"] == "preop_triage_output"
-    assert response_format["schema"] == triage_output_json_schema()
-    assert response_format["strict"] is False
+    hp_evidence = checks[CheckId.HISTORY_AND_PHYSICAL].evidence
+    assert {e.source for e in hp_evidence} == {"doc:hp-1"}
+    assert "Date of service: 01/20/2026" in {e.quote for e in hp_evidence}
+    (bp_evidence,) = checks[CheckId.BLOOD_PRESSURE].evidence
+    assert bp_evidence.source == "json:vitals[0]"
+    assert bp_evidence.date == "2026-01-25"
+    assert bp_evidence.raw_value is not None and '"systolic": 124' in bp_evidence.raw_value
+
+    assert output.explanation.startswith("READY: every policy check passed.")
+    assert "Completed H&P dated 2026-01-20" in output.explanation
 
 
-def test_triage_submission_builds_prompt_from_validated_submission(
-    openai_client: Mock,
-    submission_payload: dict[str, object],
+def test_output_is_json_native_and_round_trips(submission: dict[str, Any], cache: ExtractionCache) -> None:
+    output = triage_submission(submission, client=fake_client(FakeCompletions()), cache=cache)
+    reparsed = TriageOutput.model_validate(json.loads(canonical(output)))
+    assert reparsed == output
+
+
+def test_patient_submission_model_is_accepted(submission: dict[str, Any], cache: ExtractionCache) -> None:
+    output = triage_submission(PatientSubmission.model_validate(submission), client=fake_client(FakeCompletions()), cache=cache)
+    assert output.decision == Decision.READY
+
+
+# =============================================================================
+# Issues and evidence formatting
+# =============================================================================
+
+
+def test_issues_are_sorted_and_evidence_is_chronological(submission: dict[str, Any], cache: ExtractionCache) -> None:
+    submission["vitals"].append({"type": "blood_pressure", "systolic": 190, "diastolic": 112, "date": "2026-01-30T08:00:00Z"})
+    submission["labs"] = []
+    submission["medications"].append({"name": "apixaban 5 mg PO BID", "active": True})
+    output = triage_submission(submission, client=fake_client(FakeCompletions()), cache=cache)
+
+    assert output.decision == Decision.NOT_CLEARED
+    keys = [(issue.category, issue.reason_code) for issue in output.issues]
+    assert keys == sorted(keys)
+    assert {issue.reason_code for issue in output.issues} == {
+        ReasonCode.SYSTOLIC_BP_HIGH, ReasonCode.DIASTOLIC_BP_HIGH, ReasonCode.CBC_MISSING, ReasonCode.ANTICOAG_PLAN_MISSING,
+    }
+    for issue in output.issues:
+        assert issue.evidence and issue.resolution and issue.description
+        dated = [e.date for e in issue.evidence if e.date is not None]
+        assert dated == sorted(dated)
+        assert all(e.date is not None for e in issue.evidence[: len(dated)])  # undated evidence last
+    high = next(i for i in output.issues if i.reason_code == ReasonCode.SYSTOLIC_BP_HIGH)
+    assert [e.source for e in high.evidence] == ["json:vitals[2]"]
+    assert "R4_BLOOD_PRESSURE" not in {c.check for c in output.passed_checks}
+    assert "R4_TEMPERATURE" in {c.check for c in output.passed_checks}
+
+
+def test_no_api_key_and_no_cache_fails_closed(submission: dict[str, Any]) -> None:
+    output = triage_submission(submission)  # default client: None (no key); empty cache
+
+    assert output.decision == Decision.NEEDS_FOLLOW_UP
+    failed = next(i for i in output.issues if i.reason_code == ReasonCode.EXTRACTION_FAILED)
+    assert failed.category == IssueCategory.MISSING_REQUIRED_DATA
+    assert {e.source for e in failed.evidence} == {"doc:hp-1", "doc:consent-1"}
+    assert all("extraction failed" in (e.detail or "") for e in failed.evidence)
+    assert "R0_SOURCES_READABLE" not in {c.check for c in output.passed_checks}
+
+
+def test_document_without_text_or_id_fails_closed(submission: dict[str, Any], cache: ExtractionCache) -> None:
+    submission["documents"].append({"doc_id": "blank", "type": "Note", "date": "2026-01-23", "text": "  "})
+    submission["documents"].append({"type": "Orphan note", "date": "2026-01-24", "text": "No id."})
+    output = triage_submission(submission, client=fake_client(FakeCompletions()), cache=cache)
+    (failed,) = [i for i in output.issues if i.reason_code == ReasonCode.EXTRACTION_FAILED]
+    assert {e.source for e in failed.evidence} == {"doc:blank", "json:documents[3]"}
+
+
+# =============================================================================
+# Determinism
+# =============================================================================
+
+
+def test_ten_runs_are_byte_identical_and_cache_replays_without_a_client(
+    submission: dict[str, Any], cache: ExtractionCache
 ) -> None:
-    submission = PatientSubmission.model_validate(submission_payload)
-
-    triage_submission(submission, model="test-model")
-
-    assert openai_client.responses.create.call_count == 1
-    call = openai_client.responses.create.call_args.kwargs
-    message = call["input"][0]
-    content = message["content"][0]
-    prompt = content["text"]
-
-    assert message["type"] == "message"
-    assert message["role"] == "user"
-    assert content["type"] == "input_text"
-    assert json.loads(prompt.split("Submission JSON:\n", 1)[1]) == submission.model_dump()
-
-
-def test_triage_submission_rejects_invalid_model_json(
-    openai_client: Mock,
-    submission_payload: dict[str, object],
-) -> None:
-    openai_client.responses.create.return_value = SimpleNamespace(
-        output_text=json.dumps(
-            {
-                "decision": "MAYBE",
-                "issues": [],
-                "explanation": "Not a valid triage decision.",
-            }
-        )
-    )
-
-    with pytest.raises(ValidationError):
-        triage_submission(submission_payload, model="test-model")
-
-    assert openai_client.responses.create.call_count == 1
+    completions = FakeCompletions()
+    first = canonical(triage_submission(submission, client=fake_client(completions), cache=cache))
+    replays = {canonical(triage_submission(copy.deepcopy(submission), client=None, cache=cache)) for _ in range(10)}
+    assert replays == {first}
+    assert completions.calls == 2  # one call per document; every later run is a cache hit

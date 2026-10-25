@@ -30,6 +30,7 @@ from fact_builders import (
     temp_c,
 )
 from models import LabStatus, MedicationStatus, ReconciledPatientFacts
+from packet import build_output
 from scorer import LabeledCase, Prediction, load_labels, score_all
 
 DATA = Path(__file__).resolve().parent.parent / "data" / "patients_sample_50.jsonl"
@@ -243,10 +244,12 @@ def test_engine_reproduces_label_from_perfect_facts(case_id: str, labels: dict[s
 
 
 def test_gold_outputs_score_perfectly_with_zero_false_ready(labels: dict[str, LabeledCase]) -> None:
-    predictions = {
-        case_id: Prediction(case_id, json.loads(evaluate(build()).model_dump_json()))
-        for case_id, build in GOLD.items()
-    }
+    def packet_for(build: Callable[[], ReconciledPatientFacts]) -> dict[str, object]:
+        facts = build()
+        output: dict[str, object] = json.loads(build_output(facts, evaluate(facts)).model_dump_json())
+        return output
+
+    predictions = {case_id: Prediction(case_id, packet_for(build)) for case_id, build in GOLD.items()}
     summary = score_all(list(labels.values()), predictions, only_predicted=True)
     assert summary.records == len(GOLD)
     assert summary.false_ready_case_ids == []

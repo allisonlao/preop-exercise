@@ -2,7 +2,7 @@ INPUT ?= data/patients_sample_50.jsonl
 OUTPUT ?= data/baseline_outputs.jsonl
 REPORT ?= data/eval_report.json
 DETERMINISM_REPORT ?= data/determinism_report.json
-MODEL ?= gpt-4.1-mini
+MODEL ?= gpt-4o
 SCORER_FLAGS ?=
 
 .PHONY: baseline evals determinism score report test typecheck all clean
@@ -49,10 +49,11 @@ typecheck:
 		--with 'mypy>=1.10' \
 		mypy --strict --explicit-package-bases \
 		models.py engine.py preprocess.py scorer.py \
-		schemas.py extract.py verify.py reconcile.py \
+		schemas.py extract.py verify.py reconcile.py packet.py core.py \
 		tests/fact_builders.py tests/llm_fixtures.py tests/test_engine.py \
 		tests/test_gold_cases.py tests/test_preprocess.py tests/test_scorer.py \
-		tests/test_extract.py tests/test_verify.py tests/test_reconcile.py
+		tests/test_extract.py tests/test_verify.py tests/test_reconcile.py \
+		tests/test_triage_submission.py
 
 all: baseline evals determinism score
 
