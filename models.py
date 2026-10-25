@@ -285,7 +285,7 @@ class SurgicalConsent(_Fact):
 class LabTest(StrEnum):
     CBC = "CBC"
     CMP = "CMP"
-    OTHER = "OTHER"  # anything the policy does not require (BMP, TSH, UA, ...)
+    IGNORE = "IGNORE"  # anything the policy does not require (BMP, TSH, UA, ...)
 
 
 class LabStatus(StrEnum):
@@ -375,6 +375,12 @@ class TemperatureUnit(StrEnum):
     CELSIUS = "C"
 
 
+def celsius_to_fahrenheit(celsius: Decimal) -> Decimal:
+    """Exact for any finite decimal input, because 9/5 = 1.8 is a terminating decimal."""
+
+    return celsius * Decimal(9) / Decimal(5) + Decimal(32)
+
+
 class TemperatureReading(_Fact):
     observed_at: AwareDatetime
     precision: TimePrecision = TimePrecision.MINUTE
@@ -387,7 +393,7 @@ class TemperatureReading(_Fact):
     def value_f(self) -> Decimal:
         if self.unit is TemperatureUnit.FAHRENHEIT:
             return self.value
-        return self.value * Decimal(9) / Decimal(5) + Decimal(32)
+        return celsius_to_fahrenheit(self.value)
 
 
 class ReconciledPatientFacts(_Fact):

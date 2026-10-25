@@ -108,7 +108,7 @@ def cmp(collected: str, status: LabStatus = LabStatus.FINAL) -> LabResult:
 
 
 def other_lab(collected: str) -> LabResult:
-    return lab(LabTest.OTHER, collected)
+    return lab(LabTest.IGNORE, collected)
 
 
 def bp(
