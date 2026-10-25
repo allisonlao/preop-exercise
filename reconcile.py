@@ -761,13 +761,14 @@ def resolve_anticoagulation_plans(docs: Sequence[TrustedDocument]) -> tuple[Anti
 # Unreadable sources
 # =============================================================================
 
-_FAIL_CLOSED_RECORDS: Final = ("vitals", "medications")
+# A malformed document (no id, bad date) could hold any fact, so it fails closed too.
+_FAIL_CLOSED_RECORDS: Final = ("vitals", "medications", "documents")
 
 
 def collect_unreadable_sources(
     structured: StructuredSubmission, docs: Sequence[TrustedDocument]
 ) -> tuple[Evidence, ...]:
-    """Failed or missing extractions, and malformed vital / medication records."""
+    """Failed or missing extractions, and malformed vital / medication / document records."""
 
     found: list[Evidence] = []
     extracted_ids = {doc.doc_id for doc in docs}

@@ -34,6 +34,8 @@ from fact_builders import (
 )
 from models import (
     Decision,
+    Evidence,
+    EvidenceSource,
     Issue,
     IssueCategory,
     LabStatus,
@@ -461,3 +463,27 @@ def test_facts_reject_naive_timestamps() -> None:
                 ],
             }
         )
+
+
+# =============================================================================
+# Unreadable sources
+# =============================================================================
+
+
+def test_unreadable_document_withholds_absence_findings() -> None:
+    unreadable = Evidence(source=EvidenceSource.DOCUMENT, locator="documents[d9]", detail="document extraction failed")
+    facts = ready_facts(
+        history_and_physicals=(), consents=(), medications=(med("apixaban"),), unreadable_sources=(unreadable,)
+    )
+    result = evaluate(facts)
+    assert result.decision is Decision.NEEDS_FOLLOW_UP
+    (issue,) = result.issues
+    assert issue.reason_code is ReasonCode.EXTRACTION_FAILED
+    assert issue.category is IssueCategory.MISSING_REQUIRED_DATA
+    assert "cannot pass" in issue.description
+
+
+def test_unreadable_structured_record_keeps_absence_findings() -> None:
+    unreadable = Evidence(source=EvidenceSource.STRUCTURED, locator="vitals[3]", detail="systolic is not a number")
+    result = evaluate(ready_facts(history_and_physicals=(), unreadable_sources=(unreadable,)))
+    assert set(codes(result.issues)) == {ReasonCode.EXTRACTION_FAILED, ReasonCode.HP_MISSING}

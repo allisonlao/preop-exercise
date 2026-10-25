@@ -175,18 +175,38 @@ def check_preconditions(facts: ReconciledPatientFacts) -> list[Issue]:
         )
 
     if facts.unreadable_sources:
+        blocked = (
+            " Until they are read, the H&P, consent, and anticoagulation-plan checks cannot pass."
+            if documents_unreadable(facts)
+            else ""
+        )
         issues.append(
             _issue(
                 ReasonCode.EXTRACTION_FAILED,
                 RuleId.R0_PRECONDITIONS,
                 f"{len(facts.unreadable_sources)} source item(s) could not be read reliably; "
-                "any facts they contain are unknown.",
+                f"any facts they contain are unknown.{blocked}",
                 facts.unreadable_sources,
                 "Review the listed documents or records manually, then re-run triage.",
             )
         )
 
     return issues
+
+
+# Findings that only mean "not found in the readable documents". If any document is
+# unreadable the item may be inside it, so "missing" would be a false statement; the
+# EXTRACTION_FAILED issue (MISSING_REQUIRED_DATA) already blocks READY instead.
+ABSENCE_IN_DOCUMENTS = frozenset(
+    {ReasonCode.HP_MISSING, ReasonCode.CONSENT_MISSING, ReasonCode.ANTICOAG_PLAN_MISSING}
+)
+
+
+def documents_unreadable(facts: ReconciledPatientFacts) -> bool:
+    return any(
+        ev.source is EvidenceSource.DOCUMENT or ev.locator.startswith("documents")
+        for ev in facts.unreadable_sources
+    )
 
 
 # =============================================================================
@@ -257,7 +277,7 @@ def _check_history_and_physical(
     )
 
 
-def _consent_failure(consent: SurgicalConsent) -> ReasonCode | None:
+def consent_failure(consent: SurgicalConsent) -> ReasonCode | None:
     """Why a consent does not qualify, checked in order of severity."""
 
     if consent.procedure_matches is False:
@@ -289,7 +309,7 @@ def _consent_recency(consent: SurgicalConsent) -> date:
 
 def _check_consent(consents: Sequence[SurgicalConsent]) -> Issue | None:
     # Any one valid consent satisfies the rule (a later signed form supersedes a pending one).
-    if any(_consent_failure(consent) is None for consent in consents):
+    if any(consent_failure(consent) is None for consent in consents):
         return None
 
     rule = RuleId.R1_DOCUMENTATION
@@ -306,7 +326,7 @@ def _check_consent(consents: Sequence[SurgicalConsent]) -> Issue | None:
     # Report the failure of the most recent consent; cite every consent so the reviewer sees all.
     newest = _latest(consents, key=_consent_recency)
     assert newest is not None
-    reason = _consent_failure(newest)
+    reason = consent_failure(newest)
     assert reason is not None
     evidence = [ev for consent in consents for ev in consent.evidence]
     return _issue(reason, rule, _CONSENT_DESCRIPTIONS[reason], evidence, resolution)
@@ -412,7 +432,7 @@ def check_anticoagulation(facts: ReconciledPatientFacts) -> list[Issue]:
     return issues
 
 
-def _plan_gaps(plan: AnticoagulationPlan) -> list[ReasonCode]:
+def plan_gaps(plan: AnticoagulationPlan) -> list[ReasonCode]:
     """Completeness gaps for a plan, most informative first."""
 
     gaps: list[ReasonCode] = []
@@ -470,12 +490,12 @@ def _check_plan_for(
             f"Reconcile the conflicting {drug} plans into one documented plan.",
         )
 
-    if any(not _plan_gaps(plan) for plan in matching):
+    if any(not plan_gaps(plan) for plan in matching):
         return None
 
     newest = _latest(matching, key=lambda plan: plan.written_on or date.min)
     assert newest is not None
-    gaps = _plan_gaps(newest)
+    gaps = plan_gaps(newest)
     return _issue(
         gaps[0],
         rule,
@@ -609,6 +629,8 @@ def evaluate(facts: ReconciledPatientFacts) -> TriageResult:
     """Run every rule and derive the decision from the combined issues."""
 
     issues = [issue for rule in RULES for issue in rule(facts)]
+    if documents_unreadable(facts):
+        issues = [issue for issue in issues if issue.reason_code not in ABSENCE_IN_DOCUMENTS]
     decision = decision_for({issue.category for issue in issues})
     return TriageResult(decision=decision, issues=issues, explanation=_explain(decision, issues))
 
