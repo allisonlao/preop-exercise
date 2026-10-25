@@ -1,0 +1,17 @@
+[project]
+name = "preop-exercise"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "allisonlao", email = "126843440+allisonlao@users.noreply.github.com" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+preop-exercise = "preop_exercise:main"
+
+[build-system]
+requires = ["uv_build>=0.13.5,<0.14.0"]
+build-backend = "uv_build"
