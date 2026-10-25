@@ -47,8 +47,9 @@ typecheck:
 		--with 'pytest>=8.0.0' \
 		--with 'mypy>=1.10' \
 		mypy --strict --explicit-package-bases \
-		models.py engine.py scorer.py \
-		tests/fact_builders.py tests/test_engine.py tests/test_gold_cases.py tests/test_scorer.py
+		models.py engine.py preprocess.py scorer.py \
+		tests/fact_builders.py tests/test_engine.py tests/test_gold_cases.py \
+		tests/test_preprocess.py tests/test_scorer.py
 
 all: baseline evals determinism score
 

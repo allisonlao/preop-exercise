@@ -95,6 +95,9 @@ make typecheck   # mypy --strict
   `ReconciledPatientFacts`, the merged JSON + document view the engine consumes.
 - `engine.py`: pure rule functions R0-R4 and `evaluate(facts) -> TriageResult`.
   All policy thresholds and windows are constants at the top of the file.
+- `preprocess.py`: Stage 2 structured-data parsing (labs, vitals, medications,
+  demographics) with lab and drug lookup tables. Records that are read but not
+  used are returned in `excluded` with a reason, never dropped silently.
 - `scorer.py`: offline scoring harness.
 - `tests/test_gold_cases.py`: hand-reconciled facts for 19 sample cases, checked
   against their labels.
