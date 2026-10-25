@@ -41,7 +41,8 @@ Then after cloning the repo, run:
 ```bash
 uv sync
 ```
-This installs the dependencies
+This installs the dependencies.
+
 2. Set your OpenAI API key.
 
 ```bash
