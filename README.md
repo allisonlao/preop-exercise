@@ -1,28 +1,5 @@
 # Pre-Op Triage Take-Home
 
-## Objective
-
-Implement `triage_submission(...)` in `core.py` - it is a pre-op triage function for a single submission package. It is currently a naive LLM-based solution that makes a real model API call. The starter implementation intentionally does not follow some best practices in using the OpenAI API. You may use whatever file structure makes sense for your solution.
-
-Your output must match this schema:
-
-- `decision`: `READY | NEEDS_FOLLOW_UP | NOT_CLEARED`
-- `issues[]`: `category` + evidence (how you design this is up to you)
-- `explanation`
-
-## What Is Provided
-
-- `data/patients_sample_50.jsonl` includes:
-  - `case_id`
-  - `submission`
-  - `label` (what a human labeled this case as)
-- `run_baseline.py` runs your `triage_submission` implementation and writes outputs.
-- `run_evals.py` scores outputs against provided `label` and can run determinism checks.
-
-## Completion
-
-Note: this exercise is evaluated on engineering judgment. You may not reach a 100% score, and that is OK! We are looking to understand how you approached the problem and designed a working solution.
-
 ## Setup
 
 1. Confirm `uv` is installed.
